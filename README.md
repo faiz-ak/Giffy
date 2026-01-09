@@ -1,55 +1,53 @@
-# 🎬 Custom GIF Generator
+# 🎬 Custom GIF Generator – Frontend
 
-A **frontend-only customizable GIF generator** built using **React.js** that allows users to search GIFs based on text prompts, overlay aesthetic custom text, and **download real animated GIFs with the text embedded**, all without using any backend.
+A React.js-based web application that allows users to generate customized GIFs using text prompts. The frontend communicates with a Spring Boot backend proxy that securely fetches GIF data from the GIPHY API, ensuring API key protection and reliable access even on restricted corporate networks.
 
-This project demonstrates advanced frontend concepts such as **API integration, canvas rendering, GIF frame decoding and re-encoding**, and dynamic UI customization.
+This project focuses on clean UI design, smooth user experience, and secure API consumption.
 
 ---
 
 ## 🚀 Features
 
-- 🔍 Smart GIF search based on user intent  
-- ✍️ Custom text overlay with font size, color & position control  
-- 🎞️ Real animated GIF download (text embedded in every frame)  
-- ⏳ Loader for better user experience  
-- ♻️ Reload / reset functionality  
-- 🧠 Keyword extraction for accurate GIF results  
-- 💯 No backend required  
+- Generate GIFs based on user text input
+- Real-time loader for better UX
+- Clean and responsive user interface
+- Secure API access via backend proxy
+- Handles corporate network (403) restrictions
+- Easy to deploy on Netlify or similar platforms
 
 ---
 
-## 🛠️ Technologies Used
+## 🛠️ Tech Stack
 
-### ⚛️ React.js
-- Component-based UI
-- State management using hooks
-- Conditional rendering for loaders & previews
-
-### 🌐 Axios
-- API communication with GIPHY
-- Simplified HTTP requests & error handling
-
-### 🎞️ GIPHY API
-- Fetches emotion-based and keyword-matched GIFs
-- Provides a large and reliable GIF database
-
-### 🧩 gifuct-js
-- Decodes GIFs into individual frames
-- Enables frame-level manipulation using canvas
-
-### 🎥 gifshot
-- Re-encodes edited frames into a new animated GIF
-- Generates downloadable GIF files in-browser
+- **React.js**
+- **JavaScript (ES6+)**
+- **Axios**
+- **CSS**
+- **Spring Boot Backend (OpenFeign Proxy)**
+- **GIPHY API**
 
 ---
 
-## 🔁 Project Workflow
+## 🔁 Application Flow
 
-1. User enters a custom text prompt  
-2. Core keyword is extracted for accurate GIF search  
-3. GIF is fetched from GIPHY API  
-4. GIF frames are decoded using gifuct-js  
-5. Custom text is drawn on each frame using Canvas  
-6. Frames are re-encoded into a new animated GIF using gifshot  
-7. User downloads the customized GIF  
+User enters text
+↓
+React Frontend
+↓
+Spring Boot Backend Proxy
+↓
+GIPHY API
+↓
+GIF data returned to frontend
 
+
+---
+
+## 📡 API Integration
+
+The frontend does **not** call the GIPHY API directly.
+
+All requests are routed through a Spring Boot backend that:
+- Hides API keys
+- Handles CORS
+- Avoids corporate firewall restrictions
