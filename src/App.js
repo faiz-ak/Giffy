@@ -34,7 +34,7 @@ function App() {
 
     try {
       const res = await axios.get(
-        "https://api.giphy.com/v1/gifs/search",
+        "https://giffy.up.railway.app/api/gif",
         {
           params: {
             api_key: API_KEY,
