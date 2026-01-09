@@ -53,7 +53,3 @@ This project demonstrates advanced frontend concepts such as **API integration, 
 6. Frames are re-encoded into a new animated GIF using gifshot  
 7. User downloads the customized GIF  
 
----
-
-## 📁 Folder Structure
-
