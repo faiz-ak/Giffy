@@ -4,6 +4,7 @@ import { parseGIF, decompressFrames } from "gifuct-js";
 import gifshot from "gifshot";
 import "./App.css";
 
+/* 🔎 Smart keyword mapping */
 const getSearchKeyword = (text) => {
   const t = text.toLowerCase();
   if (t.includes("love")) return "i love you";
@@ -12,6 +13,8 @@ const getSearchKeyword = (text) => {
   if (t.includes("sorry")) return "sorry";
   return text.split(" ").slice(0, 2).join(" ");
 };
+
+const BACKEND_URL = "https://giffy.up.railway.app";
 
 function App() {
   const [inputText, setInputText] = useState("");
@@ -22,8 +25,7 @@ function App() {
   const [textColor, setTextColor] = useState("#ffffff");
   const [position, setPosition] = useState("bottom");
 
-  const API_KEY = "UISKtTGeHvXS62y4bcZm4A1vhSsIP9bq";
-
+  /* 🎬 Generate GIF */
   const generateGif = async () => {
     if (!inputText.trim()) return;
 
@@ -34,82 +36,109 @@ function App() {
 
     try {
       const res = await axios.get(
-        "https://giffy.up.railway.app/api/gif",
+        `${BACKEND_URL}/api/gif`,
         {
-          params: {
-            api_key: API_KEY,
-            q: keyword,
-            limit: 1,
-            rating: "g",
-          },
+          params: { q: keyword },
+          timeout: 15000, // ✅ office-network safe
         }
       );
 
-      const gif = res.data.data[0].images.original.url;
+      const data = res?.data?.data;
+
+      if (!Array.isArray(data) || data.length === 0) {
+        alert("No GIF found for this prompt");
+        return;
+      }
+
+      const gif =
+        data[0]?.images?.original?.url ||
+        data[0]?.images?.downsized?.url;
+
+      if (!gif) {
+        alert("GIF format unavailable");
+        return;
+      }
+
       setGifUrl(gif);
-      setLoading(false);
-    } catch {
-      alert("GIF not found");
+    } catch (err) {
+      console.error(err);
+      alert("Network issue while fetching GIF");
+    } finally {
       setLoading(false);
     }
   };
 
-  /* 🔥 REAL GIF EXPORT */
+  /* 🔥 REAL GIF EXPORT (OFFICE SAFE) */
   const downloadGifWithText = async () => {
+    if (!gifUrl) return;
+
     setLoading(true);
 
-    const res = await fetch(gifUrl);
-    const buffer = await res.arrayBuffer();
+    try {
+      const res = await fetch(gifUrl);
+      const buffer = await res.arrayBuffer();
 
-    const gif = parseGIF(buffer);
-    const frames = decompressFrames(gif, true);
+      const gif = parseGIF(buffer);
+      const frames = decompressFrames(gif, true);
 
-    const images = frames.map((frame) => {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-
-      canvas.width = frame.dims.width;
-      canvas.height = frame.dims.height;
-
-      const imageData = ctx.createImageData(
-        frame.dims.width,
-        frame.dims.height
-      );
-      imageData.data.set(frame.patch);
-      ctx.putImageData(imageData, 0, 0);
-
-      ctx.font = `bold ${fontSize}px Poppins`;
-      ctx.fillStyle = textColor;
-      ctx.textAlign = "center";
-      ctx.shadowColor = "rgba(0,0,0,0.9)";
-      ctx.shadowBlur = 12;
-
-      let y = canvas.height * 0.85;
-      if (position === "center") y = canvas.height * 0.5;
-      if (position === "top") y = canvas.height * 0.15;
-
-      ctx.fillText(inputText, canvas.width / 2, y);
-
-      return canvas.toDataURL("image/png");
-    });
-
-    gifshot.createGIF(
-      {
-        images,
-        gifWidth: frames[0].dims.width,
-        gifHeight: frames[0].dims.height,
-        interval: 0.15,
-      },
-      function (obj) {
-        if (!obj.error) {
-          const link = document.createElement("a");
-          link.href = obj.image;
-          link.download = "custom-text.gif";
-          link.click();
-        }
-        setLoading(false);
+      if (!frames || frames.length === 0) {
+        alert("Unable to process GIF frames");
+        return;
       }
-    );
+
+      const images = frames.map((frame) => {
+        const width = frame.dims?.width || gif.lsd?.width || 300;
+        const height = frame.dims?.height || gif.lsd?.height || 300;
+
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = width;
+        canvas.height = height;
+
+        if (frame.patch) {
+          const imageData = ctx.createImageData(width, height);
+          imageData.data.set(frame.patch);
+          ctx.putImageData(imageData, 0, 0);
+        }
+
+        ctx.font = `bold ${fontSize}px Poppins`;
+        ctx.fillStyle = textColor;
+        ctx.textAlign = "center";
+        ctx.shadowColor = "rgba(0,0,0,0.9)";
+        ctx.shadowBlur = 12;
+
+        let y = canvas.height * 0.85;
+        if (position === "center") y = canvas.height * 0.5;
+        if (position === "top") y = canvas.height * 0.15;
+
+        ctx.fillText(inputText, canvas.width / 2, y);
+
+        return canvas.toDataURL("image/png");
+      });
+
+      gifshot.createGIF(
+        {
+          images,
+          interval: 0.15,
+        },
+        function (obj) {
+          if (!obj.error) {
+            const link = document.createElement("a");
+            link.href = obj.image;
+            link.download = "custom-text.gif";
+            link.click();
+          } else {
+            alert("Failed to generate GIF");
+          }
+          setLoading(false);
+        }
+      );
+    } catch (err) {
+      console.error(err);
+      alert("GIF processing failed");
+      setLoading(false);
+    }
   };
 
   return (
@@ -123,9 +152,16 @@ function App() {
       />
 
       <div className="btn-group">
-        <button onClick={generateGif}>Generate GIF</button>
+        <button onClick={generateGif} disabled={loading}>
+          Generate GIF
+        </button>
+
         {gifUrl && (
-          <button className="download-btn" onClick={downloadGifWithText}>
+          <button
+            className="download-btn"
+            onClick={downloadGifWithText}
+            disabled={loading}
+          >
             Download GIF
           </button>
         )}
