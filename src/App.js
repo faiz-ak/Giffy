@@ -117,7 +117,7 @@ function App() {
       <h1>Custom GIF Generator ✨</h1>
 
       <input
-        placeholder="I love you Sayan ❤️"
+        placeholder="User Friendly Prompt"
         value={inputText}
         onChange={(e) => setInputText(e.target.value)}
       />
