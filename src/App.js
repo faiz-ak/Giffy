@@ -18,73 +18,51 @@ const BACKEND_URL = "https://giffy.up.railway.app";
 
 function App() {
   const [inputText, setInputText] = useState("");
-  const [gifUrl, setGifUrl] = useState("");
+  const [gifs, setGifs] = useState([]); // ⬅️ multiple gifs
   const [loading, setLoading] = useState(false);
 
   const [fontSize, setFontSize] = useState(28);
   const [textColor, setTextColor] = useState("#ffffff");
   const [position, setPosition] = useState("bottom");
 
-  /* 🎬 Generate GIF */
+  /* 🎬 Generate MULTIPLE GIFs */
   const generateGif = async () => {
     if (!inputText.trim()) return;
 
     setLoading(true);
-    setGifUrl("");
+    setGifs([]);
 
     const keyword = getSearchKeyword(inputText);
 
     try {
       const res = await axios.get(
-        `${BACKEND_URL}/api/gif`,
+        `${BACKEND_URL}/api/gifs`,
         {
           params: { q: keyword },
-          timeout: 15000, // ✅ office-network safe
+          timeout: 15000,
         }
       );
 
-      const data = res?.data?.data;
-
-      if (!Array.isArray(data) || data.length === 0) {
-        alert("No GIF found for this prompt");
-        return;
-      }
-
-      const gif =
-        data[0]?.images?.original?.url ||
-        data[0]?.images?.downsized?.url;
-
-      if (!gif) {
-        alert("GIF format unavailable");
-        return;
-      }
-
-      setGifUrl(gif);
+      // Backend already returns proxy-safe URLs
+      setGifs(res.data);
     } catch (err) {
       console.error(err);
-      alert("Network issue while fetching GIF");
+      alert("Failed to fetch GIFs");
     } finally {
       setLoading(false);
     }
   };
 
-  /* 🔥 REAL GIF EXPORT (OFFICE SAFE) */
-  const downloadGifWithText = async () => {
-    if (!gifUrl) return;
-
+  /* 🔥 Download with overlay text */
+  const downloadGifWithText = async (gifUrl) => {
     setLoading(true);
 
     try {
-      const res = await fetch(gifUrl);
+      const res = await fetch(`${BACKEND_URL}${gifUrl}`);
       const buffer = await res.arrayBuffer();
 
       const gif = parseGIF(buffer);
       const frames = decompressFrames(gif, true);
-
-      if (!frames || frames.length === 0) {
-        alert("Unable to process GIF frames");
-        return;
-      }
 
       const images = frames.map((frame) => {
         const width = frame.dims?.width || gif.lsd?.width || 300;
@@ -118,24 +96,19 @@ function App() {
       });
 
       gifshot.createGIF(
-        {
-          images,
-          interval: 0.15,
-        },
+        { images, interval: 0.15 },
         function (obj) {
           if (!obj.error) {
             const link = document.createElement("a");
             link.href = obj.image;
             link.download = "custom-text.gif";
             link.click();
-          } else {
-            alert("Failed to generate GIF");
           }
           setLoading(false);
         }
       );
-    } catch (err) {
-      console.error(err);
+    } catch (e) {
+      console.error(e);
       alert("GIF processing failed");
       setLoading(false);
     }
@@ -155,16 +128,6 @@ function App() {
         <button onClick={generateGif} disabled={loading}>
           Generate GIF
         </button>
-
-        {gifUrl && (
-          <button
-            className="download-btn"
-            onClick={downloadGifWithText}
-            disabled={loading}
-          >
-            Download GIF
-          </button>
-        )}
       </div>
 
       <div className="custom-panel">
@@ -203,17 +166,33 @@ function App() {
 
       {loading && <p className="loading">Processing… please wait</p>}
 
-      {gifUrl && (
-        <div className="gif-preview">
-          <img src={gifUrl} alt="preview" />
-          <div
-            className={`overlay ${position}`}
-            style={{ fontSize: `${fontSize}px`, color: textColor }}
-          >
-            {inputText}
-          </div>
+      {/* 🎞️ MULTIPLE GIF PREVIEW (same design) */}
+<div className="gif-grid">
+  {gifs.map((gif, i) => (
+    <div className="gif-card" key={i}>
+      <div className="gif-preview">
+        <img src={`${BACKEND_URL}${gif}`} alt="gif" />
+
+        <div
+          className={`overlay ${position}`}
+          style={{
+            fontSize: `${fontSize}px`,
+            color: textColor,
+          }}
+        >
+          {inputText}
         </div>
-      )}
+      </div>
+
+      <div className="gif-actions">
+        <button onClick={() => downloadGifWithText(gif)}>
+          Download GIF
+        </button>
+      </div>
+    </div>
+  ))}
+</div>
+
     </div>
   );
 }

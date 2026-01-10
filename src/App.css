@@ -1,25 +1,36 @@
+/* 🌌 Global */
 body {
+  margin: 0;
   background: radial-gradient(circle at top, #020617, #000);
-  font-family: Poppins, system-ui;
+  font-family: Poppins, system-ui, -apple-system, BlinkMacSystemFont;
   color: white;
+  box-sizing: border-box;
 }
 
+/* 📦 Main Container */
 .container {
   min-height: 100vh;
+  width: 100%;
+  padding: 40px 16px;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
   align-items: center;
-  justify-content: center;
 }
 
+/* 🔠 Input */
 input {
   width: 360px;
-  padding: 14px;
-  border-radius: 10px;
+  max-width: 90%;
+  padding: 14px 16px;
+  border-radius: 12px;
   border: none;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
+  font-size: 15px;
+  outline: none;
 }
 
+/* 🎯 Buttons */
 .btn-group {
   display: flex;
   gap: 12px;
@@ -27,21 +38,30 @@ input {
 
 button {
   padding: 10px 22px;
-  border-radius: 10px;
+  border-radius: 12px;
   border: none;
   font-weight: 600;
   cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
-.download-btn {
-  background: #020617;
-  color: #22c55e;
+button:hover {
+  transform: translateY(-1px);
+  opacity: 0.95;
 }
 
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 🎛 Customization Panel */
 .custom-panel {
-  margin-top: 16px;
+  margin-top: 18px;
   display: flex;
-  gap: 16px;
+  gap: 18px;
+  flex-wrap: wrap;
+  justify-content: center;
   font-size: 13px;
 }
 
@@ -51,37 +71,111 @@ button {
   gap: 6px;
 }
 
-.badge {
-  background: #020617;
-  padding: 2px 8px;
-  border-radius: 6px;
-  color: #22c55e;
-  font-size: 12px;
-  width: fit-content;
-}
-
+/* 🔄 Loader */
 .loading {
-  margin-top: 14px;
+  margin-top: 18px;
+  font-size: 14px;
+  opacity: 0.9;
 }
 
+/* 🧱 GIF GRID (FIXED 300px ITEMS) */
+.gif-grid {
+  margin-top: 32px;
+  width: 100%;
+  max-width: 1100px;
+
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px;
+}
+
+/* 🎞 GIF CARD (300px FIXED) */
+.gif-card {
+  width: 300px;
+  max-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 🖼 GIF PREVIEW */
 .gif-preview {
   position: relative;
-  margin-top: 24px;
+  width: 300px;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #020617;
 }
 
 .gif-preview img {
-  width: 360px;
+  width: 300px;
+max-height: 300px;
+  display: block;
   border-radius: 18px;
 }
 
+/* 📝 Overlay Text (SAFE & WRAPPED) */
 .overlay {
   position: absolute;
-  width: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  padding: 0 8px;
+
   text-align: center;
   font-weight: 700;
-  text-shadow: 0 4px 20px rgba(0,0,0,0.9);
+  line-height: 1.2;
+
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
 }
 
-.overlay.bottom { bottom: 14%; }
-.overlay.center { top: 45%; transform: translateY(-50%); }
-.overlay.top { top: 10%; }
+/* ⬆⬇ Overlay Positions */
+.overlay.bottom {
+  bottom: 12%;
+}
+
+.overlay.center {
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.overlay.top {
+  top: 8%;
+}
+
+/* ⬇ DOWNLOAD BUTTON BELOW EACH GIF */
+.gif-actions {
+  margin-top: 10px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.gif-actions button {
+  width: 100%;
+  background: #020617;
+  color: #22c55e;
+  padding: 10px 0;
+  border-radius: 12px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* 📱 Mobile */
+@media (max-width: 480px) {
+  .gif-card {
+    width: 100%;
+  }
+
+  .gif-preview,
+  .gif-preview img {
+    width: 100%;
+  }
+}
