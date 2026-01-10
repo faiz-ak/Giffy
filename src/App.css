@@ -109,8 +109,8 @@ button:disabled {
 }
 
 .gif-preview img {
-  width: 300px;
-max-height: 300px;
+  width: 100%;
+  height: auto;
   display: block;
   border-radius: 18px;
 }
