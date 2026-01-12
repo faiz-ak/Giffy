@@ -14,7 +14,7 @@ const getSearchKeyword = (text) => {
   return text.split(" ").slice(0, 2).join(" ");
 };
 
-const BACKEND_URL = "https://giffy.up.railway.app";
+const BACKEND_URL = "https://giffy-backend.onrender.com";
 
 function App() {
   const [inputText, setInputText] = useState("");
@@ -101,7 +101,7 @@ function App() {
           if (!obj.error) {
             const link = document.createElement("a");
             link.href = obj.image;
-            link.download = "custom-text.gif";
+            link.download = `${inputText}.gif`;
             link.click();
           }
           setLoading(false);
