@@ -116,7 +116,7 @@ function App() {
     try {
       const res = await axios.get(`${BACKEND_URL}/api/gifs`, {
         params: { q: getSearchKeyword(inputText) },
-        timeout: 70000,
+        timeout: 90000,
       });
       setGifs(res.data);
     } catch {
