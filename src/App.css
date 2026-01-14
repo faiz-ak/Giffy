@@ -1,181 +1,254 @@
 /* 🌌 Global */
-body {
-  margin: 0;
-  background: radial-gradient(circle at top, #020617, #000);
-  font-family: Poppins, system-ui, -apple-system, BlinkMacSystemFont;
-  color: white;
+* {
   box-sizing: border-box;
 }
-
+ 
+body {
+  margin: 0;
+  background: radial-gradient(circle at top, #020617, #000000);
+  font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont;
+  color: #f8fafc;
+  overflow-x: hidden;
+}
+ 
 /* 📦 Main Container */
 .container {
   min-height: 100vh;
-  width: 100%;
-  padding: 40px 16px;
+  padding: 48px 20px;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
   align-items: center;
+  gap: 14px;
 }
-
+ 
+/* 🏷 Heading */
+.container h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  margin-bottom: 10px;
+  text-align: center;
+  background: linear-gradient(90deg, #22c55e, #38bdf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+ .hint-text {
+  max-width: 520px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #cbd5f5;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(2, 6, 23, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
 /* 🔠 Input */
 input {
   width: 360px;
   max-width: 90%;
-  padding: 14px 16px;
-  border-radius: 12px;
-  border: none;
-  margin-bottom: 14px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(2, 6, 23, 0.9);
+  color: #f8fafc;
   font-size: 15px;
   outline: none;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
 }
-
+ 
+input::placeholder {
+  color: #94a3b8;
+}
+ 
+input:focus {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
+}
+ 
 /* 🎯 Buttons */
 .btn-group {
   display: flex;
-  gap: 12px;
+  gap: 14px;
+  margin-top: 6px;
 }
-
+ 
 button {
-  padding: 10px 22px;
-  border-radius: 12px;
+  padding: 10px 24px;
+  border-radius: 14px;
   border: none;
   font-weight: 600;
+  font-size: 14px;
   cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.15s ease;
+  color: #020617;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
-
+ 
 button:hover {
-  transform: translateY(-1px);
-  opacity: 0.95;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(34, 197, 94, 0.25);
 }
-
+ 
 button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  box-shadow: none;
 }
-
+ 
 /* 🎛 Customization Panel */
 .custom-panel {
-  margin-top: 18px;
+  margin-top: 20px;
   display: flex;
-  gap: 18px;
+  gap: 20px;
   flex-wrap: wrap;
   justify-content: center;
   font-size: 13px;
+  background: rgba(2, 6, 23, 0.6);
+  padding: 14px 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
-
+ 
 .custom-panel label {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  color: #cbd5f5;
 }
-
+ 
+.custom-panel input,
+.custom-panel select {
+  background: #020617;
+  color: white;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 6px 8px;
+  font-size: 12px;
+}
+ 
 /* 🔄 Loader */
 .loading {
   margin-top: 18px;
   font-size: 14px;
-  opacity: 0.9;
+  opacity: 0.85;
+  letter-spacing: 0.3px;
 }
-
-/* 🧱 GIF GRID (FIXED 300px ITEMS) */
+ 
+/* 🧱 GIF GRID */
 .gif-grid {
-  margin-top: 32px;
+  margin-top: 36px;
   width: 100%;
   max-width: 1100px;
-
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 24px;
+  gap: 26px;
 }
-
-/* 🎞 GIF CARD (300px FIXED) */
+ 
+/* 🎞 GIF CARD */
 .gif-card {
   width: 300px;
-  max-height: 300px;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-
+ 
 /* 🖼 GIF PREVIEW */
 .gif-preview {
   position: relative;
   width: 300px;
-  border-radius: 18px;
+  border-radius: 20px;
   overflow: hidden;
   background: #020617;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-
+ 
+.gif-preview:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.65);
+}
+ 
 .gif-preview img {
   width: 100%;
   height: auto;
+  min-height: 300px;
+  max-height: 300px;
   display: block;
-  border-radius: 18px;
+  border-radius: 20px;
 }
-
-/* 📝 Overlay Text (SAFE & WRAPPED) */
+ 
+/* 📝 Overlay Text */
 .overlay {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
   width: 90%;
-  padding: 0 8px;
-
+  padding: 0 10px;
   text-align: center;
   font-weight: 700;
-  line-height: 1.2;
-
+  line-height: 1.25;
   white-space: normal;
   word-wrap: break-word;
   overflow-wrap: break-word;
-
-  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.9);
+  text-shadow: 0 4px 22px rgba(0, 0, 0, 0.9);
   pointer-events: none;
 }
-
+ 
 /* ⬆⬇ Overlay Positions */
 .overlay.bottom {
   bottom: 12%;
 }
-
+ 
 .overlay.center {
   top: 50%;
   transform: translate(-50%, -50%);
 }
-
+ 
 .overlay.top {
   top: 8%;
 }
-
-/* ⬇ DOWNLOAD BUTTON BELOW EACH GIF */
+ 
+/* ⬇ DOWNLOAD BUTTON */
 .gif-actions {
-  margin-top: 10px;
+  margin-top: 12px;
   width: 100%;
   display: flex;
   justify-content: center;
 }
-
+ 
 .gif-actions button {
   width: 100%;
   background: #020617;
   color: #22c55e;
   padding: 10px 0;
-  border-radius: 12px;
-  border: none;
+  border-radius: 14px;
+  border: 1px solid rgba(34, 197, 94, 0.35);
   font-weight: 600;
-  cursor: pointer;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
 }
-
+ 
+.gif-actions button:hover {
+  background: rgba(34, 197, 94, 0.08);
+  box-shadow: 0 8px 18px rgba(34, 197, 94, 0.25);
+}
+ 
 /* 📱 Mobile */
 @media (max-width: 480px) {
   .gif-card {
     width: 100%;
   }
-
+ 
   .gif-preview,
   .gif-preview img {
     width: 100%;
   }
+ 
+  .container h1 {
+    font-size: 22px;
+  }
 }
+ 
