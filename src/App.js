@@ -1,4 +1,4 @@
-import React, { useEffect,useState } from "react";
+import React, {useState } from "react";
 import axios from "axios";
 import { parseGIF, decompressFrames } from "gifuct-js";
 import gifshot from "gifshot";
@@ -105,19 +105,6 @@ function App() {
   const [position, setPosition] = useState("bottom");
  
   const [showText, setShowText] = useState(true);
-  const [showWaitMessage, setShowWaitMessage] = useState(true);
- 
-
-
- useEffect(() => {
-
-  const timer = setTimeout(() => {
-    setShowWaitMessage(false);
-    
-  }, 60000); // ⏱️ 1 minute
- 
-  return () => clearTimeout(timer);
-}, []);
 
   /* 🎬 Generate GIFs */
   const generateGif = async () => {
@@ -217,13 +204,12 @@ function App() {
   return (
     <div className="container">
   <h1>Giffy - A customized Gif Generator ✨</h1>
-{showWaitMessage && (
+
   <p className="hint-text">
     ⏳ Please wait <strong>1 minute</strong> before clicking
     <strong> Generate GIF</strong>.  
-    Backend processing may take some time. <span style={{color:"red !important", fontWeight:"bolder"}}> Dont refresh the page much!!</span>
+    Backend processing may take some time.
   </p>
-)}
 
  
 <input
@@ -233,11 +219,11 @@ function App() {
 />
  
       <div className="btn-group">
-        <button onClick={generateGif}  disabled={loading || showWaitMessage}>
+        <button onClick={generateGif}  disabled={loading}>
           Generate GIF
         </button>
  
-        <button onClick={() => setShowText(!showText)}   disabled={loading || showWaitMessage}>
+        <button onClick={() => setShowText(!showText)}   disabled={loading}>
           {showText ? "Remove Text" : "Add Text"}
         </button>
       </div>
