@@ -32,18 +32,63 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
- .hint-text {
+/* 💡 Hint Text Container */
+.hint-text {
+  position: relative;
+  margin-top: 12px;
+  padding: 10px 16px;
   max-width: 520px;
-  text-align: center;
+ 
   font-size: 13px;
+  text-align: center;
   line-height: 1.6;
   color: #cbd5f5;
-  margin-bottom: 16px;
-  padding: 10px 14px;
+ 
+  background: rgba(2, 6, 23, 0.9);
   border-radius: 12px;
-  background: rgba(2, 6, 23, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+ 
+  z-index: 0;
+  overflow: hidden;
+}
+
+/* 🌈 Gradient Border Layer */
+.hint-text::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1.5px; /* border thickness */
+  border-radius: 12px;
+ 
+  background: linear-gradient(
+    90deg,
+    #22c55e,
+    #38bdf8,
+    #a855f7,
+    #22c55e
+  );
+  background-size: 300% 300%;
+ 
+  animation: gradientBorderMove 4s linear infinite;
+ 
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+ 
+  z-index: -1;
+}
+ 
+@keyframes gradientBorderMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 /* 🔠 Input */
 input {
