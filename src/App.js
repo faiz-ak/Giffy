@@ -1,135 +1,247 @@
-import React, { useState } from "react";
+import React, { useEffect,useState } from "react";
 import axios from "axios";
 import { parseGIF, decompressFrames } from "gifuct-js";
 import gifshot from "gifshot";
 import "./App.css";
-
-/* 🔎 Smart keyword mapping */
+ 
+/* SMART KEYWORD MAPPING (ADVANCED) */
 const getSearchKeyword = (text) => {
-  const t = text.toLowerCase();
-  if (t.includes("love")) return "i love you";
-  if (t.includes("miss")) return "i miss you";
-  if (t.includes("birthday")) return "happy birthday";
-  if (t.includes("sorry")) return "sorry";
-  return text.split(" ").slice(0, 2).join(" ");
+  const t = text.toLowerCase().trim();
+//  love and romance
+  if (/(i\s*love\s*you|love\s*you|luv\s*u|romantic|heart|my\s*love)/.test(t))
+    return "i love you";
+//  miss / longing
+  if (/(miss\s*you|missing\s*you|wish\s*you\s*were\s*here|longing)/.test(t))
+    return "i miss you";
+//  Birthday
+  if (/(birthday|bday|born\s*day|happy\s*birthday)/.test(t))
+    return "happy birthday";
+//  sorry / apology
+  if (/(sorry|apologize|apology|forgive\s*me|my\s*bad)/.test(t))
+    return "sorry";
+//  celebration
+  if (/(congrats|congratulations|celebrate|celebration|party|cheers)/.test(t))
+    return "celebration";
+//  funny / laugh
+  if (/(funny|lol|lmao|haha|laugh|joke|meme)/.test(t))
+    return "funny reaction";
+// compliments 
+  if (/(cute|beautiful|handsome|gorgeous|pretty|adorable)/.test(t))
+    return "cute reaction";
+// motivation 
+  if (/(motivation|inspire|you\s*can\s*do\s*it|never\s*give\s*up|success)/.test(t))
+    return "motivational";
+// angry 
+  if (/(angry|mad|annoyed|frustrated|rage)/.test(t))
+    return "angry reaction";
+//  cool / attitude
+  if (/(cool|awesome|legend|boss|king|queen|savage)/.test(t))
+    return "cool reaction";
+// tired / sleep 
+  if (/(sleepy|tired|exhausted|need\s*sleep|good\s*night)/.test(t))
+    return "sleepy";
+// sad 
+  if (/(sad|depressed|lonely|heartbroken|cry)/.test(t))
+    return "sad reaction";
+// greeting 
+  if (/(hi|hello|hey|good\s*morning|good\s*evening)/.test(t))
+    return "hello greeting";
+ 
+  /* 🧠 SMART FALLBACK */
+  const cleaned = t
+    .replace(/[^a-zA-Z\s]/g, "")
+    .split(" ")
+    .filter((w) => w.length > 2);
+ 
+  return cleaned.slice(0, 3).join(" ") || "reaction";
 };
-
+ 
 const BACKEND_URL = "https://giffy-backend.onrender.com";
-
+ 
+/* 🧠 SAFE TEXT WRAP (NO CUTTING) */
+const drawWrappedText = (
+  ctx,
+  text,
+  x,
+  y,
+  maxWidth,
+  lineHeight,
+  canvasHeight
+) => {
+  const words = text.split(" ");
+  let line = "";
+  const lines = [];
+ 
+  for (let i = 0; i < words.length; i++) {
+    const testLine = line + words[i] + " ";
+    if (ctx.measureText(testLine).width > maxWidth && i > 0) {
+      lines.push(line);
+      line = words[i] + " ";
+    } else {
+      line = testLine;
+    }
+  }
+  lines.push(line);
+ 
+  const totalHeight = lines.length * lineHeight;
+ 
+  let startY = y;
+  if (startY + totalHeight > canvasHeight - 10) {
+    startY = canvasHeight - totalHeight - 10;
+  }
+ 
+  lines.forEach((l, i) => {
+    ctx.fillText(l.trim(), x, startY + i * lineHeight);
+  });
+};
+ 
 function App() {
   const [inputText, setInputText] = useState("");
-  const [gifs, setGifs] = useState([]); // ⬅️ multiple gifs
+  const [gifs, setGifs] = useState([]);
   const [loading, setLoading] = useState(false);
-
+ 
   const [fontSize, setFontSize] = useState(28);
   const [textColor, setTextColor] = useState("#ffffff");
   const [position, setPosition] = useState("bottom");
+ 
+  const [showText, setShowText] = useState(true);
+  const [showWaitMessage, setShowWaitMessage] = useState(true);
+ 
 
-  /* 🎬 Generate MULTIPLE GIFs */
+
+ useEffect(() => {
+
+  const timer = setTimeout(() => {
+    setShowWaitMessage(false);
+    
+  }, 60000); // ⏱️ 1 minute
+ 
+  return () => clearTimeout(timer);
+}, []);
+
+  /* 🎬 Generate GIFs */
   const generateGif = async () => {
     if (!inputText.trim()) return;
-
+ 
     setLoading(true);
     setGifs([]);
-
-    const keyword = getSearchKeyword(inputText);
-
+ 
     try {
-      const res = await axios.get(
-        `${BACKEND_URL}/api/gifs`,
-        {
-          params: { q: keyword },
-          timeout: 15000,
-        }
-      );
-
-      // Backend already returns proxy-safe URLs
+      const res = await axios.get(`${BACKEND_URL}/api/gifs`, {
+        params: { q: getSearchKeyword(inputText) },
+        timeout: 60000,
+      });
       setGifs(res.data);
-    } catch (err) {
-      console.error(err);
+    } catch {
       alert("Failed to fetch GIFs");
     } finally {
       setLoading(false);
     }
   };
-
-  /* 🔥 Download with overlay text */
+ 
+  /* 🔥 Download GIF */
   const downloadGifWithText = async (gifUrl) => {
     setLoading(true);
-
+ 
     try {
       const res = await fetch(`${BACKEND_URL}${gifUrl}`);
       const buffer = await res.arrayBuffer();
-
+ 
       const gif = parseGIF(buffer);
       const frames = decompressFrames(gif, true);
-
+ 
       const images = frames.map((frame) => {
-        const width = frame.dims?.width || gif.lsd?.width || 300;
-        const height = frame.dims?.height || gif.lsd?.height || 300;
-
+        const width = frame.dims?.width || 300;
+        const height = frame.dims?.height || 300;
+ 
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
-
+ 
         canvas.width = width;
         canvas.height = height;
-
-        if (frame.patch) {
-          const imageData = ctx.createImageData(width, height);
-          imageData.data.set(frame.patch);
-          ctx.putImageData(imageData, 0, 0);
+ 
+        const imageData = ctx.createImageData(width, height);
+        imageData.data.set(frame.patch);
+        ctx.putImageData(imageData, 0, 0);
+ 
+        if (showText) {
+          let safeFontSize = fontSize;
+          ctx.font = `bold ${safeFontSize}px Poppins`;
+ 
+          while (
+            ctx.measureText(inputText).width > width * 0.9 &&
+            safeFontSize > 14
+          ) {
+            safeFontSize -= 2;
+            ctx.font = `bold ${safeFontSize}px Poppins`;
+          }
+ 
+          ctx.fillStyle = textColor;
+          ctx.textAlign = "center";
+          ctx.shadowColor = "rgba(0,0,0,0.9)";
+          ctx.shadowBlur = 12;
+ 
+          let y = height * 0.85;
+          if (position === "center") y = height * 0.5;
+          if (position === "top") y = height * 0.15;
+ 
+          drawWrappedText(
+            ctx,
+            inputText,
+            width / 2,
+            y,
+            width * 0.85,
+            safeFontSize * 1.25,
+            height
+          );
         }
-
-        ctx.font = `bold ${fontSize}px Poppins`;
-        ctx.fillStyle = textColor;
-        ctx.textAlign = "center";
-        ctx.shadowColor = "rgba(0,0,0,0.9)";
-        ctx.shadowBlur = 12;
-
-        let y = canvas.height * 0.85;
-        if (position === "center") y = canvas.height * 0.5;
-        if (position === "top") y = canvas.height * 0.15;
-
-        ctx.fillText(inputText, canvas.width / 2, y);
-
+ 
         return canvas.toDataURL("image/png");
       });
-
-      gifshot.createGIF(
-        { images, interval: 0.15 },
-        function (obj) {
-          if (!obj.error) {
-            const link = document.createElement("a");
-            link.href = obj.image;
-            link.download = `${inputText}.gif`;
-            link.click();
-          }
-          setLoading(false);
+ 
+      gifshot.createGIF({ images, interval: 0.15 }, (obj) => {
+        if (!obj.error) {
+          const link = document.createElement("a");
+          link.href = obj.image;
+          link.download = `${inputText}.gif`;
+          link.click();
         }
-      );
-    } catch (e) {
-      console.error(e);
+        setLoading(false);
+      });
+    } catch {
       alert("GIF processing failed");
       setLoading(false);
     }
   };
-
+ 
   return (
     <div className="container">
-      <h1>Custom GIF Generator ✨</h1>
+  <h1>Giffy - A customized Gif Generator ✨</h1>
+{showWaitMessage && (
+  <p className="hint-text">
+    ⏳ Please wait <strong>1 minute</strong> before clicking
+    <strong> Generate GIF</strong>.  
+    Backend processing may take some time. <span style={{color:"red !important", fontWeight:"bolder"}}> Dont refresh the page much!!</span>
+  </p>
+)}
 
-      <input
-        placeholder="User Friendly Prompt"
-        value={inputText}
-        onChange={(e) => setInputText(e.target.value)}
-      />
-
+ 
+<input
+  placeholder="User Friendly Prompt"
+  value={inputText}
+  onChange={(e) => setInputText(e.target.value)}
+/>
+ 
       <div className="btn-group">
-        <button onClick={generateGif} disabled={loading}>
+        <button onClick={generateGif}  disabled={loading || showWaitMessage}>
           Generate GIF
         </button>
+ 
+        <button onClick={() => setShowText(!showText)}   disabled={loading || showWaitMessage}>
+          {showText ? "Remove Text" : "Add Text"}
+        </button>
       </div>
-
+ 
       <div className="custom-panel">
         <label>
           Font Size [{fontSize}px]
@@ -138,10 +250,10 @@ function App() {
             min="18"
             max="44"
             value={fontSize}
-            onChange={(e) => setFontSize(Number(e.target.value))}
+            onChange={(e) => setFontSize(+e.target.value)}
           />
         </label>
-
+ 
         <label>
           Text Color
           <input
@@ -150,51 +262,51 @@ function App() {
             onChange={(e) => setTextColor(e.target.value)}
           />
         </label>
-
+ 
         <label>
           Position
-          <select
-            value={position}
-            onChange={(e) => setPosition(e.target.value)}
-          >
+          <select value={position} onChange={(e) => setPosition(e.target.value)}>
             <option value="bottom">Bottom</option>
             <option value="center">Center</option>
             <option value="top">Top</option>
           </select>
         </label>
       </div>
-
-      {loading && <p className="loading">Processing… please wait</p>}
-
-      {/* 🎞️ MULTIPLE GIF PREVIEW (same design) */}
-<div className="gif-grid">
-  {gifs.map((gif, i) => (
-    <div className="gif-card" key={i}>
-      <div className="gif-preview">
-        <img src={`${BACKEND_URL}${gif}`} alt="gif" />
-
-        <div
-          className={`overlay ${position}`}
-          style={{
-            fontSize: `${fontSize}px`,
-            color: textColor,
-          }}
-        >
-          {inputText}
-        </div>
+ 
+     {loading && (
+  <p className="loading">
+    🎬 Generating GIFs…
+  </p>
+)}
+ 
+      <div className="gif-grid">
+        {gifs.map((gif, i) => (
+          <div className="gif-card" key={i}>
+            <div className="gif-preview">
+              <img src={`${BACKEND_URL}${gif}`} alt="gif" />
+ 
+              {showText && (
+                <div
+                  className={`overlay ${position}`}
+                  style={{ fontSize, color: textColor }}
+                >
+                  {inputText}
+                </div>
+              )}
+            </div>
+ 
+            <div className="gif-actions">
+              <button
+  onClick={()=> downloadGifWithText(gif)}
+>
+  Download GIF
+</button>
+            </div>
+          </div>
+        ))}
       </div>
-
-      <div className="gif-actions">
-        <button onClick={() => downloadGifWithText(gif)}>
-          Download GIF
-        </button>
-      </div>
-    </div>
-  ))}
-</div>
-
     </div>
   );
 }
-
+ 
 export default App;
