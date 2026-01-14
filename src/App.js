@@ -205,11 +205,10 @@ function App() {
     <div className="container">
   <h1>Giffy - A customized Gif Generator ✨</h1>
 
-  <p className="hint-text">
-    ⏳ Please wait <strong>1 minute</strong> before clicking
-    <strong> Generate GIF</strong>.  
-    Backend processing may take some time.
-  </p>
+ <p className="hint-text">
+  ⏳ Please wait <strong>up to 1 minute</strong> before clicking <strong>Generate GIF</strong>.
+  Our server may take a short time to wake up during the first run or after being idle for 15 minutes.
+</p>
 
  
 <input
