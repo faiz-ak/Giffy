@@ -1,4 +1,4 @@
-import React, {useState } from "react";
+import React, {useEffect, useState } from "react";
 import axios from "axios";
 import { parseGIF, decompressFrames } from "gifuct-js";
 import gifshot from "gifshot";
@@ -105,7 +105,14 @@ function App() {
   const [position, setPosition] = useState("bottom");
  
   const [showText, setShowText] = useState(true);
-
+  const [showWaitMessage, setShowWaitMessage] = useState(true);
+  useEffect(() => {
+  const timer = setTimeout(() => {
+    setShowWaitMessage(false);
+  }, 60000); // ⏱️ 1 minute
+ 
+  return () => clearTimeout(timer);
+}, []);
   /* 🎬 Generate GIFs */
   const generateGif = async () => {
     if (!inputText.trim()) return;
@@ -204,12 +211,12 @@ function App() {
   return (
     <div className="container">
   <h1>Giffy - A customized Gif Generator ✨</h1>
-
- <p className="hint-text">
+{showWaitMessage && (
+   <p className="hint-text">
   ⏳ Please wait <strong>up to 1 minute</strong> before clicking <strong>Generate GIF</strong>.
   Our server may take a short time to wake up during the first run or after being idle for 15 minutes.
 </p>
-
+)}
  
 <input
   placeholder="User Friendly Prompt"
