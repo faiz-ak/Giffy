@@ -96,6 +96,32 @@ const drawWrappedText = (
 };
  
 function App() {
+  /* GOOGLE FONTS*/
+const GOOGLE_FONTS = [
+  "Poppins",
+  "Roboto",
+  "Montserrat",
+  "Open Sans",
+  "Lato",
+  "Inter",
+  "Raleway",
+  "Nunito",
+  "Playfair Display",
+  "Merriweather",
+  "Oswald",
+  "Ubuntu",
+  "Roboto Slab",
+  "DM Sans",
+  "Source Sans 3",
+  "Pacifico",
+  "Dancing Script",
+  "Great Vibes",
+  "Lobster",
+  "Bebas Neue",
+  "Anton"
+];
+  const [fontFamily, setFontFamily] = useState("Poppins");
+
   const [inputText, setInputText] = useState("");
   const [gifs, setGifs] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -167,7 +193,8 @@ function App() {
             safeFontSize > 14
           ) {
             safeFontSize -= 2;
-            ctx.font = `bold ${safeFontSize}px Poppins`;
+          ctx.font = `bold ${safeFontSize}px ${fontFamily}`;
+
           }
  
           ctx.fillStyle = textColor;
@@ -245,7 +272,8 @@ function App() {
             onChange={(e) => setFontSize(+e.target.value)}
           />
         </label>
- 
+
+
         <label>
           Text Color
           <input
@@ -254,7 +282,19 @@ function App() {
             onChange={(e) => setTextColor(e.target.value)}
           />
         </label>
- 
+  <label>
+  Font Family
+  <select
+    value={fontFamily}
+    onChange={(e) => setFontFamily(e.target.value)}
+  >
+    {GOOGLE_FONTS.map((font) => (
+      <option key={font} value={font} style={{ fontFamily: font }}>
+        {font}
+      </option>
+    ))}
+  </select>
+</label>
         <label>
           Position
           <select value={position} onChange={(e) => setPosition(e.target.value)}>
@@ -279,11 +319,16 @@ function App() {
  
               {showText && (
                 <div
-                  className={`overlay ${position}`}
-                  style={{ fontSize, color: textColor }}
-                >
-                  {inputText}
-                </div>
+  className={`overlay ${position}`}
+  style={{
+    fontSize,
+    color: textColor,
+    fontFamily
+  }}
+>
+  {inputText}
+</div>
+
               )}
             </div>
  

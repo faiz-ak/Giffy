@@ -297,5 +297,10 @@ button:disabled {
   .container h1 {
     font-size: 22px;
   }
+  .custom-panel{
+     padding: 1em 0.5em;
+     border-radius: 0 !important;
+     justify-content: flex-start;
+  }
 }
  
