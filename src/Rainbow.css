@@ -7,7 +7,7 @@
 .tool-header h1 {
   font-size: 26px;
   font-weight: 800;
-  background: linear-gradient(90deg, red, orange, yellow, green, cyan, blue, violet);
+ background: linear-gradient(90deg, #22c55e, #38bdf8);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
