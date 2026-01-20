@@ -11,7 +11,7 @@ export default function NotFound() {
 
         <div className="notfound-illustration">
           <img
-            src="https://storyset.com/illustration/page-not-found/amico.svg"
+            src="../404.png"
             alt="404 Not Found"
           />
         </div>
