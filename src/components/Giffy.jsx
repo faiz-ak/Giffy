@@ -122,6 +122,12 @@ const GOOGLE_FONTS = [
   "Bebas Neue",
   "Anton"
 ];
+
+const LIMIT = 24;
+const [offset, setOffset] = useState(0);
+const [hasMore, setHasMore] = useState(true);
+const [page, setPage] = useState(0);
+
   const [fontFamily, setFontFamily] = useState("Poppins");
 
   const [inputText, setInputText] = useState("");
@@ -142,25 +148,128 @@ const GOOGLE_FONTS = [
   return () => clearTimeout(timer);
 }, []);
   /* 🎬 Generate GIFs */
-  const generateGif = async () => {
-    if (!inputText.trim()) return;
- 
-    setLoading(true);
-    setGifs([]);
- 
-    try {
-      const res = await axios.get(`${BACKEND_URL}/api/gifs`, {
-        params: { q: getSearchKeyword(inputText) },
-        timeout: 100000,
-      });
-      setGifs(res.data);
-    } catch {
-      alert("Failed to fetch GIFs");
-    } finally {
-      setLoading(false);
+const generateGif = async () => {
+  if (!inputText.trim()) return;
+
+  setLoading(true);
+  setGifs([]);
+setOffset(0);
+setPage(0);
+  setHasMore(true);
+
+  try {
+    const res = await axios.get(`${BACKEND_URL}/api/gifs`, {
+      params: {
+        q: getSearchKeyword(inputText),
+        offset: 0
+      },
+      timeout: 100000,
+    });
+
+    setGifs(res.data);
+    setOffset(LIMIT);
+
+    if (res.data.length < LIMIT) {
+      setHasMore(false);
     }
-  };
- 
+
+  } catch {
+    alert("Failed to fetch GIFs");
+  } finally {
+    setLoading(false);
+  }
+};
+
+/* ➡ NEXT PAGE */
+const nextPage = async () => {
+  if (loading || !hasMore) return;
+
+  setLoading(true);
+
+  try {
+    const res = await axios.get(`${BACKEND_URL}/api/gifs`, {
+      params: {
+        q: getSearchKeyword(inputText),
+        offset: offset
+      },
+      timeout: 100000,
+    });
+
+    setGifs(res.data);
+    setOffset(offset + LIMIT);
+    setPage(page + 1);
+
+    if (res.data.length < LIMIT) {
+      setHasMore(false);
+    }
+  } catch {
+    alert("Failed to load next page");
+  } finally {
+    setLoading(false);
+  }
+};
+
+/* ⬅ PREVIOUS PAGE */
+const prevPage = async () => {
+  if (loading || page === 0) return;
+
+  const newOffset = Math.max(0, offset - LIMIT * 2);
+
+  setLoading(true);
+
+  try {
+    const res = await axios.get(`${BACKEND_URL}/api/gifs`, {
+      params: {
+        q: getSearchKeyword(inputText),
+        offset: newOffset
+      },
+      timeout: 100000,
+    });
+
+    setGifs(res.data);
+    setOffset(newOffset + LIMIT);
+    setPage(page - 1);
+    setHasMore(true);
+  } catch {
+    alert("Failed to load previous page");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+ /* ⏭ LOAD MORE GIFS (PAGINATION) */
+const loadMoreGifs = async () => {
+  if (!hasMore || loading) return;
+
+  setLoading(true);
+
+  try {
+    const res = await axios.get(`${BACKEND_URL}/api/gifs`, {
+      params: {
+        q: getSearchKeyword(inputText),
+        offset: offset
+      },
+      timeout: 100000,
+    });
+
+    if (res.data.length === 0) {
+      setHasMore(false);
+    } else {
+      setGifs((prev) => [...prev, ...res.data]);
+      setOffset((prev) => prev + LIMIT);
+
+      if (res.data.length < LIMIT) {
+        setHasMore(false);
+      }
+    }
+  } catch {
+    alert("Failed to load more GIFs");
+  } finally {
+    setLoading(false);
+  }
+};
+
   /* 🔥 Download GIF */
   const downloadGifWithText = async (gifUrl) => {
     setLoading(true);
@@ -345,6 +454,20 @@ const GOOGLE_FONTS = [
           </div>
         ))}
       </div>
+     {gifs.length > 0 && (
+  <div style={{ marginTop: "28px", display: "flex", gap: "16px", alignItems: "center" }}>
+    <button onClick={prevPage} disabled={loading || page === 0}>
+      ⬅
+    </button>
+
+    <span style={{ opacity: 0.7 }}>Page {page + 1}</span>
+
+    <button onClick={nextPage} disabled={loading || !hasMore}>
+      ➡
+    </button>
+  </div>
+)}
+
     </div>
     </div>
   );
