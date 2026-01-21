@@ -9,9 +9,20 @@ html, body {
   height: 100%;
   background-color: #020617;
   overflow-x: hidden;
+  transition: background-color 0.3s ease;
+}
+
+[data-theme="light"] html,
+[data-theme="light"] body {
+  background-color: #f8fafc;
 }
 
 #root {
   min-height: 100vh;
   background-color: #020617;
+  transition: background-color 0.3s ease;
+}
+
+[data-theme="light"] #root {
+  background-color: #f8fafc;
 }

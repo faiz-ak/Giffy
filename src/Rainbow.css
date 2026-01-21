@@ -1,15 +1,46 @@
 .rainbow-page {
+  min-height: 100vh;
+
   max-width: 1200px;
   margin: 0 auto;
   padding: 32px 20px 60px;
+  color: #f8fafc;
+ 
+  transition: all 0.3s ease;
+}
+
+.tool-header {
+  text-align: center;
+  margin-bottom: 32px;
 }
 
 .tool-header h1 {
-  font-size: 26px;
+  font-size: 32px;
   font-weight: 800;
- background: linear-gradient(90deg, #22c55e, #38bdf8);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.tool-header h1 .emoji {
+  font-size: 36px;
+}
+
+.tool-header h1 .text {
+  background: linear-gradient(90deg, #22c55e, #38bdf8);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+.tool-panel h3,
+.preview-panel h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #f8fafc;
+  margin-bottom: 16px;
+  margin-top: 0;
 }
 
 .tool-grid {
@@ -24,6 +55,11 @@
   border-radius: 22px;
   padding: 24px;
   border: 1px solid rgba(255,255,255,0.08);
+  transition: all 0.3s ease;
+  position: sticky;
+  top: 100px;
+  max-width: 700px;
+  align-self: start;
 }
 
 .input {
@@ -39,8 +75,9 @@
 label {
   margin-top: 14px;
   margin-bottom: 6px;
-  font-size: 12px;
-  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 600;
+  color: #e2e8f0;
   display: block;
 }
 
@@ -62,7 +99,75 @@ select {
 
 option {
   background: #020617;
+  font-family: inherit;
+  padding: 8px;
 }
+
+/* Font Family Select Options */
+select[data-font-select] option {
+  font-size: 14px;
+  padding: 10px;
+}
+
+select[data-font-select] option[value="Arial"] { font-family: Arial, sans-serif; }
+select[data-font-select] option[value="Impact"] { font-family: Impact, sans-serif; }
+select[data-font-select] option[value="Verdana"] { font-family: Verdana, sans-serif; }
+select[data-font-select] option[value="Tahoma"] { font-family: Tahoma, sans-serif; }
+select[data-font-select] option[value="Georgia"] { font-family: Georgia, serif; }
+select[data-font-select] option[value="Abril Fatface"] { font-family: "Abril Fatface", serif; }
+select[data-font-select] option[value="Anton"] { font-family: "Anton", sans-serif; }
+select[data-font-select] option[value="Bebas Neue"] { font-family: "Bebas Neue", sans-serif; }
+select[data-font-select] option[value="Bangers"] { font-family: "Bangers", cursive; }
+select[data-font-select] option[value="Creepster"] { font-family: "Creepster", cursive; }
+select[data-font-select] option[value="Lobster"] { font-family: "Lobster", cursive; }
+select[data-font-select] option[value="Pacifico"] { font-family: "Pacifico", cursive; }
+select[data-font-select] option[value="Great Vibes"] { font-family: "Great Vibes", cursive; }
+select[data-font-select] option[value="Dancing Script"] { font-family: "Dancing Script", cursive; }
+select[data-font-select] option[value="Gloria Hallelujah"] { font-family: "Gloria Hallelujah", cursive; }
+select[data-font-select] option[value="Indie Flower"] { font-family: "Indie Flower", cursive; }
+select[data-font-select] option[value="Kaushan Script"] { font-family: "Kaushan Script", cursive; }
+select[data-font-select] option[value="Luckiest Guy"] { font-family: "Luckiest Guy", cursive; }
+select[data-font-select] option[value="Orbitron"] { font-family: "Orbitron", sans-serif; }
+select[data-font-select] option[value="Righteous"] { font-family: "Righteous", cursive; }
+select[data-font-select] option[value="Rowdies"] { font-family: "Rowdies", cursive; }
+select[data-font-select] option[value="Staatliches"] { font-family: "Staatliches", cursive; }
+select[data-font-select] option[value="Yellowtail"] { font-family: "Yellowtail", cursive; }
+select[data-font-select] option[value="Zeyada"] { font-family: "Zeyada", cursive; }
+select[data-font-select] option[value="Fredoka One"] { font-family: "Fredoka One", cursive; }
+select[data-font-select] option[value="Bungee"] { font-family: "Bungee", cursive; }
+select[data-font-select] option[value="Monoton"] { font-family: "Monoton", cursive; }
+select[data-font-select] option[value="Fascinate"] { font-family: "Fascinate", cursive; }
+select[data-font-select] option[value="Nosifer"] { font-family: "Nosifer", cursive; }
+select[data-font-select] option[value="Butcherman"] { font-family: "Butcherman", cursive; }
+select[data-font-select] option[value="Chela One"] { font-family: "Chela One", cursive; }
+select[data-font-select] option[value="Eater"] { font-family: "Eater", cursive; }
+select[data-font-select] option[value="Fontdiner Swanky"] { font-family: "Fontdiner Swanky", cursive; }
+select[data-font-select] option[value="Griffy"] { font-family: "Griffy", cursive; }
+select[data-font-select] option[value="Henny Penny"] { font-family: "Henny Penny", cursive; }
+select[data-font-select] option[value="Metal Mania"] { font-family: "Metal Mania", cursive; }
+select[data-font-select] option[value="New Rocker"] { font-family: "New Rocker", cursive; }
+select[data-font-select] option[value="Pirata One"] { font-family: "Pirata One", cursive; }
+select[data-font-select] option[value="Rye"] { font-family: "Rye", cursive; }
+select[data-font-select] option[value="Shrikhand"] { font-family: "Shrikhand", cursive; }
+select[data-font-select] option[value="Snowburst One"] { font-family: "Snowburst One", cursive; }
+select[data-font-select] option[value="Spicy Rice"] { font-family: "Spicy Rice", cursive; }
+select[data-font-select] option[value="Stalinist One"] { font-family: "Stalinist One", cursive; }
+select[data-font-select] option[value="Vampiro One"] { font-family: "Vampiro One", cursive; }
+select[data-font-select] option[value="Wallpoet"] { font-family: "Wallpoet", cursive; }
+select[data-font-select] option[value="Creepster Caps"] { font-family: "Creepster Caps", cursive; }
+select[data-font-select] option[value="Finger Paint"] { font-family: "Finger Paint", cursive; }
+select[data-font-select] option[value="Freckle Face"] { font-family: "Freckle Face", cursive; }
+select[data-font-select] option[value="Jolly Lodger"] { font-family: "Jolly Lodger", cursive; }
+select[data-font-select] option[value="Lacquer"] { font-family: "Lacquer", cursive; }
+select[data-font-select] option[value="Londrina Outline"] { font-family: "Londrina Outline", cursive; }
+select[data-font-select] option[value="Megrim"] { font-family: "Megrim", cursive; }
+select[data-font-select] option[value="Nosifer Caps"] { font-family: "Nosifer Caps", cursive; }
+select[data-font-select] option[value="Plaster"] { font-family: "Plaster", cursive; }
+select[data-font-select] option[value="Rubik Glitch"] { font-family: "Rubik Glitch", cursive; }
+select[data-font-select] option[value="Sevillana"] { font-family: "Sevillana", cursive; }
+select[data-font-select] option[value="Trade Winds"] { font-family: "Trade Winds", cursive; }
+select[data-font-select] option[value="Unlock"] { font-family: "Unlock", cursive; }
+select[data-font-select] option[value="Warnes"] { font-family: "Warnes", cursive; }
 
 .preview-canvas {
   min-height: 260px;
@@ -70,12 +175,22 @@ option {
   border-radius: 16px;
   background: rgba(0,0,0,0.25);
   border: 2px dashed rgba(255,255,255,0.15);
+  overflow: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .gradient-text {
   font-weight: 700;
   display: block;
   white-space: pre;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  background-size: 100% 100% !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
 }
 
 .apply-btn {
@@ -91,12 +206,123 @@ option {
 .preview-placeholder {
   color: #94a3b8;
   font-style: italic;
+  text-align: center;
+  padding: 40px 20px;
+  font-size: 16px;
 }
 
 .custom-colors {
   margin-top: 12px;
   display: flex;
   gap: 12px;
+  align-items: center;
+}
+
+.gradient-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+  margin-bottom: 16px;
+}
+
+.gradient-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+  background-size: 115% 115% !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+.gradient-circle:hover {
+  transform: scale(1.1);
+}
+
+.gradient-circle.selected {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
+}
+
+.custom-colors input[type="color"] {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: none;
+  padding: 0;
+}
+
+.custom-colors input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+  border-radius: 50%;
+  border: none;
+}
+
+.custom-colors input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 50%;
+}
+
+.custom-colors input[type="color"]::-moz-color-swatch {
+  border: none;
+  border-radius: 50%;
+}
+
+.custom-colors input[type="color"]:hover {
+  transform: scale(1.1);
+}
+
+.custom-colors input[type="color"]:focus {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
+  outline: none;
+}
+
+.gradient-circle:hover {
+  transform: scale(1.1);
+}
+
+.gradient-circle.selected {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
+}
+
+.custom-colors input {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.custom-colors input:hover {
+  transform: scale(1.1);
+}
+
+.custom-colors input:focus {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
+  outline: none;
+}
+  
+
+.gradient-circle:hover {
+  transform: scale(1.1);
+}
+
+.gradient-circle.selected {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
 }
 
 .custom-colors input {

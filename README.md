@@ -1,65 +1,16 @@
-# 🎨 GiffyText – Custom GIF & Rainbow Text Generator (Frontend)
+# React + Vite
 
-A modern **React.js** web application that allows users to:
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-- 🎬 Generate **customized animated GIFs** using text prompts  
-- 🌈 Create **Rainbow & Gradient Text** with live preview and export options  
+Currently, two official plugins are available:
 
-The frontend securely communicates with a **Spring Boot backend proxy** that fetches GIFs from the **GIPHY API**, ensuring API key protection and smooth access even on **restricted corporate networks**.
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-This project focuses on **clean UI, smooth UX, secure API handling, and export-ready outputs**.
+## React Compiler
 
----
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## ✨ Features
+## Expanding the ESLint configuration
 
-### 🎬 GIF Generator
-- Generate GIFs based on user text input  
-- Smart keyword-based GIF fetching  
-- Add custom text overlay on GIFs  
-- Font size, color, position & font-family controls  
-- Live preview before download  
-- Download final GIF with text applied  
-- Backend-proxied API for security  
-
-### 🌈 Rainbow Text Generator
-- Rainbow-colored text (per-character coloring)  
-- Gradient text with:
-  - Preset gradients  
-  - Custom gradient colors  
-  - Adjustable gradient direction (0°–360°)  
-- Multi-line text support  
-- Live preview with accurate rendering  
-- Export options:
-  - 🖼️ PNG (pixel-perfect match with preview)  
-  - 📄 Word (.docx) with safe fallback formatting  
-
----
-
-## 🚀 Key Highlights
-
-- Clean, modern dark UI  
-- Responsive layout (desktop & mobile)  
-- Smooth loaders for better UX  
-- Secure API consumption via backend proxy  
-- Handles corporate network & firewall (403) restrictions  
-- Canvas-based PNG export for exact visuals  
-- Honest Word export handling format limitations  
-- Modular and scalable React architecture  
-
----
-
-## 🛠️ Tech Stack
-
-### Frontend
-- **React.js**
-- **JavaScript (ES6+)**
-- **Axios**
-- **CSS**
-- **HTML5 Canvas**
-
-### Backend (Proxy)
-- **Spring Boot**
-- **OpenFeign**
-- **REST APIs**
-- **GIPHY API**
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.

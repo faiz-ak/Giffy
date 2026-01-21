@@ -151,7 +151,7 @@ const GOOGLE_FONTS = [
     try {
       const res = await axios.get(`${BACKEND_URL}/api/gifs`, {
         params: { q: getSearchKeyword(inputText) },
-        timeout: 95000,
+        timeout: 100000,
       });
       setGifs(res.data);
     } catch {
@@ -243,7 +243,7 @@ const GOOGLE_FONTS = [
   <h1>Giffy - A customized Gif Generator ✨</h1>
 {showWaitMessage && (
    <p className="hint-text">
-  ⏳ Please wait <strong>up to 1 minute</strong> before clicking <strong>Generate GIF</strong>.
+  ⏳ Please wait <strong>up to 1 minute</strong> After clicking <strong>Generate GIF</strong>.
   Our server may take a short time to wake up during the first run or after being idle for 15 minutes.
 </p>
 )}

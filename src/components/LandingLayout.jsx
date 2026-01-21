@@ -41,8 +41,9 @@ export default function LandingLayout() {
         {/* RIGHT ILLUSTRATION */}
         <div className="hero-right">
           <img
-            src="../landing.gif"
+            src="/landing.gif"
             alt="Creative illustration"
+            style={{mixBlendMode:"exclusion"}}
           />
         </div>
 

@@ -8,6 +8,7 @@
   padding: 40px 20px;
   font-family: "Inter", system-ui;
   color: #f8fafc;
+  transition: all 0.3s ease;
 }
 
 /* HERO LAYOUT */

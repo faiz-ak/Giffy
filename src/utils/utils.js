@@ -37,7 +37,14 @@ export const GOOGLE_FONTS = [
   "Arial","Impact","Verdana","Tahoma","Georgia","Abril Fatface","Anton","Bebas Neue",
   "Bangers","Creepster","Lobster","Pacifico","Great Vibes","Dancing Script",
   "Gloria Hallelujah","Indie Flower","Kaushan Script","Luckiest Guy","Orbitron",
-  "Righteous","Rowdies","Staatliches","Yellowtail","Zeyada"
+  "Righteous","Rowdies","Staatliches","Yellowtail","Zeyada",
+  "Fredoka One","Bungee","Monoton","Fascinate","Creepster","Nosifer",
+  "Butcherman","Chela One","Eater","Fontdiner Swanky","Griffy",
+  "Henny Penny","Metal Mania","New Rocker","Pirata One","Rye",
+  "Shrikhand","Snowburst One","Spicy Rice","Stalinist One","Vampiro One",
+  "Wallpoet","Creepster Caps","Finger Paint","Freckle Face","Jolly Lodger",
+  "Lacquer","Londrina Outline","Megrim","Nosifer Caps","Plaster",
+  "Rubik Glitch","Sevillana","Trade Winds","Unlock","Warnes"
 ];
 
 // ===== FONT LOADER =====
