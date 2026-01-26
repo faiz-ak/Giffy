@@ -1,11 +1,14 @@
 /* 🌌 Global */
 .giffy-page {
   min-height: 100vh;
-
+  width: 100%;
   font-family: "Poppins", system-ui, -apple-system;
   color: #f8fafc;
   overflow-x: hidden;
   transition: all 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
 }
 
  
@@ -88,22 +91,74 @@
     background-position: 0% 50%;
   }
 }
+/* 🔠 Input Container */
+.input-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+/* 🔍 Search Icon */
+.input-container .search-icon {
+  position: absolute;
+  left: calc(50% - 168px);
+  top: 40%;
+  transform: translateY(-50%) scaleX(-1);
+  color: #b8c5d1;
+  font-size: 30px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.input-container .clear-btn {
+  position: absolute;
+  right: calc(50% - 168px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease, transform 0.1s ease;
+  z-index: 1;
+}
+
 /* 🔠 Input */
 .giffy-page input {
   width: 360px;
   max-width: 90%;
-  padding: 14px 18px;
+  padding: 14px 35px 14px 40px;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 2px solid #22c55e;
   background: rgba(2, 6, 23, 0.9);
   color: #f8fafc;
   font-size: 15px;
   outline: none;
   transition: border 0.2s ease, box-shadow 0.2s ease;
 }
+
+.input-container .clear-btn:hover {
+  color: #f8fafc;
+  background: rgba(148, 163, 184, 0.1);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.input-container .clear-btn:active {
+  transform: translateY(-50%) scale(0.95);
+}
  
 .giffy-page  input::placeholder {
-  color: #94a3b8;
+  color: rgba(148, 163, 184, 0.2);
+  font-style: italic;
 }
  
  .giffy-page input:focus {

@@ -1,17 +1,22 @@
 .rainbow-page {
   min-height: 100vh;
-
-  max-width: 1200px;
+  width: 100vw;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 32px 20px 60px;
+  padding: 10px 20px 60px;
   color: #f8fafc;
- 
   transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
 }
 
 .tool-header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 8px;
+  width: 100%;
+  max-width: 1400px;
 }
 
 .tool-header h1 {
@@ -20,7 +25,7 @@
   margin-bottom: 8px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 12px;
 }
 
@@ -45,8 +50,11 @@
 
 .tool-grid {
   display: grid;
-  grid-template-columns: 420px 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 28px;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .tool-panel,
@@ -56,20 +64,59 @@
   padding: 24px;
   border: 1px solid rgba(255,255,255,0.08);
   transition: all 0.3s ease;
-  position: sticky;
-  top: 100px;
-  max-width: 700px;
-  align-self: start;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  min-height: 300px;
+  overflow: hidden;
+}
+
+.input-section {
+  display: block;
+}
+
+.input-container {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.input-container label {
+  text-align: left !important;
+  align-self: flex-start;
 }
 
 .input {
   width: 100%;
+  max-width: 100%;
+  height: 120px;
   min-height: 120px;
+  max-height: 120px;
   padding: 12px;
   border-radius: 14px;
   background: rgba(255,255,255,0.08);
   color: white;
   border: 1px solid rgba(255,255,255,0.12);
+  resize: none;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  box-sizing:border-box;
+  overflow-y: auto;
+  flex-shrink: 0;
+  outline: none;
+  margin: 0;
+}
+
+.input:focus {
+  border-color: rgba(34, 197, 94, 0.5);
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+}
+
+.controls-section {
+  flex: 1;
 }
 
 label {
@@ -79,12 +126,31 @@ label {
   font-weight: 600;
   color: #e2e8f0;
   display: block;
+  text-align: left;
+}
+
+.control-grid > div > label {
+  margin-top: 8px;
+}
+
+.control-grid > div:has(input[type="range"]) > label {
+  margin-top: 2px;
 }
 
 .control-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 18px;
+  width: 100%;
+}
+
+.gradient-direction-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  align-items: end;
+  max-width: 400px;
+  padding-left: 12px;
 }
 
 input,
@@ -171,13 +237,16 @@ select[data-font-select] option[value="Warnes"] { font-family: "Warnes", cursive
 
 .preview-canvas {
   min-height: 260px;
+  max-height: 400px;
   padding: 28px;
   border-radius: 16px;
   background: rgba(0,0,0,0.25);
   border: 2px dashed rgba(255,255,255,0.15);
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  position: relative;
 }
 
 .gradient-text {
@@ -202,7 +271,6 @@ select[data-font-select] option[value="Warnes"] { font-family: "Warnes", cursive
   cursor: pointer;
 }
 
-
 .preview-placeholder {
   color: #94a3b8;
   font-style: italic;
@@ -216,14 +284,20 @@ select[data-font-select] option[value="Warnes"] { font-family: "Warnes", cursive
   display: flex;
   gap: 12px;
   align-items: center;
+  max-width: 400px;
+  padding-left: 12px;
 }
 
 .gradient-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  display: flex;
   gap: 8px;
   margin-top: 8px;
   margin-bottom: 16px;
+  padding: 8px 12px;
+  flex-wrap: nowrap;
+  width: 100%;
+  overflow-x: auto;
+  min-height: 48px;
 }
 
 .gradient-circle {
@@ -232,7 +306,7 @@ select[data-font-select] option[value="Warnes"] { font-family: "Warnes", cursive
   border-radius: 50%;
   cursor: pointer;
   border: 2px solid transparent;
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
   background-size: 115% 115% !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
@@ -243,8 +317,13 @@ select[data-font-select] option[value="Warnes"] { font-family: "Warnes", cursive
 }
 
 .gradient-circle.selected {
-  border-color: #22c55e;
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
+  border-color: #22c55e !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.4), 0 0 12px rgba(34, 197, 94, 0.3) !important;
+}
+
+.focus-effect {
+  border-color: #22c55e !important;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3) !important;
 }
 
 .custom-colors input[type="color"] {
@@ -287,49 +366,93 @@ select[data-font-select] option[value="Warnes"] { font-family: "Warnes", cursive
   outline: none;
 }
 
-.gradient-circle:hover {
-  transform: scale(1.1);
+.floating-toolbar {
+  position: absolute;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1.5px solid rgba(34, 197, 94, 0.8);
+  border-radius: 12px;
+  padding: 8px;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 20px rgba(34, 197, 94, 0.4);
+  backdrop-filter: blur(8px);
 }
 
-.gradient-circle.selected {
-  border-color: #22c55e;
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
+.toolbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.custom-colors input {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  cursor: pointer;
-  transition: border-color 0.2s ease, transform 0.2s ease;
+.toolbar-controls input[type="number"] {
+  width: 60px;
+  margin: 0;
+  padding: 4px 6px;
+  font-size: 12px;
+  text-align: center;
 }
 
-.custom-colors input:hover {
-  transform: scale(1.1);
-}
-
-.custom-colors input:focus {
-  border-color: #22c55e;
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
-  outline: none;
-}
-  
-
-.gradient-circle:hover {
-  transform: scale(1.1);
-}
-
-.gradient-circle.selected {
-  border-color: #22c55e;
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
-}
-
-.custom-colors input {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
+.toolbar-controls input[type="color"] {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
   border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.toolbar-controls select {
+  width: 100px;
+  padding: 4px;
+  font-size: 10px;
+  margin: 0;
+}
+
+.toolbar-font-select option {
+  font-size: 11px;
+  padding: 4px;
+}
+
+.alignment-buttons {
+  display: flex;
+  gap: 2px;
+}
+
+.alignment-buttons button {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 10px;
+  font-weight: bold;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #f8fafc;
+  cursor: pointer;
+}
+
+.alignment-buttons button:hover {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.close-btn {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 4px;
+  color: #f87171;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-btn:hover {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.6);
 }
 
 .export-box {
@@ -355,7 +478,345 @@ select[data-font-select] option[value="Warnes"] { font-family: "Warnes", cursive
   color: #22c55e;
 }
 
+.toggle-btn {
+  position: relative;
+  width: 50px;
+  height: 24px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+  outline: none;
+}
+
+.toggle-btn.active {
+  background: #22c55e;
+  border-color: #22c55e;
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.toggle-btn.active .toggle-slider {
+  transform: translateX(26px);
+}
+
+.background-color-grid {
+  display: grid;
+  grid-template-columns: repeat(15, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 4px;
+  margin-top: 8px;
+  margin-bottom: 16px;
+  padding: 0 12px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.background-color-section {
+  grid-column: 1 / -1;
+}
+
+.color-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+}
+
+.color-circle:hover {
+  transform: scale(1.1);
+}
+
+.color-circle.selected {
+  border-color: #22c55e !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.4), 0 0 12px rgba(34, 197, 94, 0.3) !important;
+}
+
+.custom-background-color {
+  margin-top: 8px;
+  padding-left: 12px;
+}
+
+.custom-background-color input[type="color"] {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: none;
+  padding: 0;
+}
+
+.custom-background-color input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+  border-radius: 50%;
+  border: none;
+}
+
+.custom-background-color input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 50%;
+}
+
+.custom-background-color input[type="color"]::-moz-color-swatch {
+  border: none;
+  border-radius: 50%;
+}
+
+.custom-background-color input[type="color"]:hover {
+  transform: scale(1.1);
+}
+
+.custom-background-color input[type="color"]:focus {
+  border-color: #22c55e !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.4), 0 0 12px rgba(34, 197, 94, 0.3) !important;
+  outline: none;
+}
+
 @media (max-width: 900px) {
+  .tool-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gradient-grid {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  flex-wrap: nowrap;
+  width: 100%;
+  overflow-x: auto;
+  min-height: 48px;
+}
+
+.gradient-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  background-size: 115% 115% !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+.gradient-circle:hover {
+  transform: scale(1.1);
+}
+
+.gradient-circle.selected {
+  border-color: #22c55e !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.4), 0 0 12px rgba(34, 197, 94, 0.3) !important;
+}
+
+.custom-colors input[type="color"] {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: none;
+  padding: 0;
+}
+
+.custom-colors input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+  border-radius: 50%;
+  border: none;
+}
+
+.custom-colors input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 50%;
+}
+
+.custom-colors input[type="color"]::-moz-color-swatch {
+  border: none;
+  border-radius: 50%;
+}
+
+.custom-colors input[type="color"]:hover {
+  transform: scale(1.1);
+}
+
+.custom-colors input[type="color"]:focus {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
+  outline: none;
+}
+
+.export-box {
+  margin-top: 28px;
+  display: flex;
+  gap: 12px;
+}
+
+.export-box button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #020617;
+}
+
+.export-box .secondary {
+  background: transparent;
+  border: 1px solid rgba(34,197,94,0.45);
+  color: #22c55e;
+}
+
+/* Toggle Button Styles */
+.toggle-btn {
+  position: relative;
+  width: 50px;
+  height: 24px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+  outline: none;
+}
+
+.toggle-btn.active {
+  background: #22c55e;
+  border-color: #22c55e;
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.toggle-btn.active .toggle-slider {
+  transform: translateX(26px);
+}
+
+/* Background Color Grid Styles */
+.background-color-grid {
+  display: grid;
+  grid-template-columns: repeat(15, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 4px;
+  margin-top: 8px;
+  margin-bottom: 16px;
+  padding: 0 12px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.background-color-section {
+  grid-column: 1 / -1;
+}
+
+.color-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+}
+
+.color-circle:hover {
+  transform: scale(1.1);
+}
+
+.color-circle.selected {
+  border-color: #22c55e !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.4), 0 0 12px rgba(34, 197, 94, 0.3) !important;
+}
+
+.custom-background-color {
+  margin-top: 8px;
+  padding-left: 12px;
+}
+
+.custom-background-color input[type="color"] {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: none;
+  padding: 0;
+}
+
+.custom-background-color input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+  border-radius: 50%;
+  border: none;
+}
+
+.custom-background-color input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 50%;
+}
+
+.custom-background-color input[type="color"]::-moz-color-swatch {
+  border: none;
+  border-radius: 50%;
+}
+
+.custom-background-color input[type="color"]:hover {
+  transform: scale(1.1);
+}
+
+.custom-background-color input[type="color"]:focus {
+  border-color: #22c55e !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.4), 0 0 12px rgba(34, 197, 94, 0.3) !important;
+  outline: none;
+}
+
+@media (max-width: 900px) {
+  .tool-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 901px) {
   .tool-grid {
     grid-template-columns: 1fr;
   }

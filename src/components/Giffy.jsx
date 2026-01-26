@@ -1,4 +1,4 @@
-import React, {useEffect, useState } from "react";
+import React, {useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { parseGIF, decompressFrames } from "gifuct-js";
 import gifshot from "gifshot";
@@ -129,6 +129,7 @@ const [hasMore, setHasMore] = useState(true);
 const [page, setPage] = useState(0);
 
   const [fontFamily, setFontFamily] = useState("Poppins");
+  const inputRef = useRef(null);
 
   const [inputText, setInputText] = useState("");
   const [gifs, setGifs] = useState([]);
@@ -357,15 +358,27 @@ const loadMoreGifs = async () => {
 </p>
 )}
  
+<div className="input-container">
+<div className="search-icon">⌕</div>
 <input
-  placeholder="User Friendly Prompt"
+  ref={inputRef}
+  placeholder="Enter your text"
   value={inputText}
   onChange={(e) => setInputText(e.target.value)}
 />
+{inputText && (
+  <button className="clear-btn" onClick={() => {
+    setInputText('');
+    inputRef.current?.focus();
+  }}>
+    ×
+  </button>
+)}
+</div>
  
       <div className="btn-group">
         <button onClick={generateGif}  disabled={loading}>
-          Generate GIF
+          Generate
         </button>
  
         <button onClick={() => setShowText(!showText)}   disabled={loading}>
