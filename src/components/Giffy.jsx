@@ -254,17 +254,25 @@ return (
       <div className="modal-body">
         <div className="field">
           <label>Overlay Text</label>
-          <input
-            type="text"
-            defaultValue={globalText}
-            placeholder="Enter text..."
-            onChange={e =>
-              setGifCustom(prev => ({
-                ...prev,
-                [activeGif]: { ...prev[activeGif], text: e.target.value }
-              }))
-            }
-          />
+         <input
+  type="text"
+  placeholder="Enter text..."
+  value={
+    gifCustom[activeGif]?.text ??
+    globalText ??
+    inputText
+  }
+  onChange={e =>
+    setGifCustom(prev => ({
+      ...prev,
+      [activeGif]: {
+        ...prev[activeGif],
+        text: e.target.value
+      }
+    }))
+  }
+/>
+
         </div>
 
         <div className="field">
