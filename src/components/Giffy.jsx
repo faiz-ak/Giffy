@@ -173,63 +173,26 @@ const downloadGifWithText = async (gifUrl) => {
   const frames = decompressFrames(gif, true);
 
    const images = frames.map(frame => {
-   const scale = 2; // makes HD export
- 
    const canvas = document.createElement("canvas");
-   const ctx = canvas.getContext("2d");
- 
-    canvas.width = frame.dims.width * scale;
-    canvas.height = frame.dims.height * scale;
- 
-    ctx.scale(scale, scale);
+const ctx = canvas.getContext("2d");
+canvas.width = frame.dims.width;
+canvas.height = frame.dims.height;
     const imageData = ctx.createImageData(canvas.width, canvas.height);
     imageData.data.set(frame.patch);
     ctx.putImageData(imageData, 0, 0);
-
-ctx.font = `bold ${finalSize}px "${finalFont}", sans-serif`;
+ctx.font = `bold ${finalSize}px ${finalFont}`;
 ctx.fillStyle = finalColor;
 ctx.textAlign = "center";
-ctx.textBaseline = "middle";
  
-const maxWidth = canvas.width * 0.9;
-const words = finalText.split(" ");
-let line = "";
-const lines = [];
- 
-for (let n = 0; n < words.length; n++) {
-  const testLine = line + words[n] + " ";
-  const metrics = ctx.measureText(testLine);
-  if (metrics.width > maxWidth && n > 0) {
-    lines.push(line);
-    line = words[n] + " ";
-  } else {
-    line = testLine;
-  }
-}
-lines.push(line);
- 
-let y;
+let y = canvas.height * 0.85;
 if (finalPosition === "top") y = canvas.height * 0.15;
-else if (finalPosition === "center") y = canvas.height * 0.5;
-else y = canvas.height * 0.85;
+if (finalPosition === "center") y = canvas.height * 0.5;
  
-lines.forEach((l, i) => {
-  ctx.fillText(l.trim(), canvas.width / 2, y + i * finalSize * 1.2);
-});
+ctx.fillText(finalText, canvas.width/2, y);
     return canvas.toDataURL("image/png");
   });
 
-  gifshot.createGIF(
-  {
-    images,
-    interval: 0.12,
-    gifWidth: frames[0].dims.width * 2,
-    gifHeight: frames[0].dims.height * 2,
-    numFrames: images.length,
-    sampleInterval: 1,
-    progressCallback: () => {},
-  },
-  (obj) => {
+ gifshot.createGIF({ images, interval: 0.15 }, (obj) => {
     const link = document.createElement("a");
     link.href = obj.image;
     link.download = `${finalText}.gif`;
