@@ -89,6 +89,27 @@ const [globalPosition, setGlobalPosition] = useState("bottom");
 const [gifCustom, setGifCustom] = useState({});
 const [activeGif, setActiveGif] = useState(null);
 
+const loadGoogleFont = (font) => {
+  const id = `font-${font.replace(/\s+/g, "")}`;
+  if (document.getElementById(id)) return;
+ 
+  const link = document.createElement("link");
+  link.id = id;
+  link.rel = "stylesheet";
+  link.href = `https://fonts.googleapis.com/css2?family=${font.replace(
+    /\s+/g,
+    "+"
+  )}:wght@400;700&display=swap`;
+ 
+  document.head.appendChild(link);
+};
+ 
+useEffect(() => {
+  loadGoogleFont(globalFont);
+}, [globalFont]);
+ 
+
+ 
 /* WAIT MESSAGE */
 const [showWaitMessage, setShowWaitMessage] = useState(true);
 useEffect(() => {
@@ -401,12 +422,15 @@ return (
           <div className="field">
             <label>Font Family</label>
             <select
-              onChange={e =>
-                setGifCustom(prev => ({
-                  ...prev,
-                  [activeGif]: { ...prev[activeGif], font: e.target.value }
-                }))
-              }
+             onChange={e => {
+  const font = e.target.value;
+  loadGoogleFont(font);
+ 
+  setGifCustom(prev => ({
+    ...prev,
+    [activeGif]: { ...prev[activeGif], font }
+  }));
+}}
             >
               {GOOGLE_FONTS.map(f => <option key={f}>{f}</option>)}
             </select>
