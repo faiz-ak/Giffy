@@ -11,7 +11,7 @@ import { saveAs } from "file-saver";
 
 // Global state variables (like JS version)
 let text = "";
-let fontSize = 36;
+let fontSize = 24;
 let lineHeight = 1;
 let letterSpacing = 1;
 let fontFamily = "Arial";
@@ -39,38 +39,61 @@ export default function Rainbow() {
   const colorRef = useRef(null);
   const alignmentRef = useRef(null);
   const [angleDisplay, setAngleDisplay] = useState(45);
-  const [showGradientOptions, setShowGradientOptions] = useState(false);
-  const [showBackgroundColor, setShowBackgroundColor] = useState(false);
   const [hasSelection, setHasSelection] = useState(false);
   const [selectedGradientState, setSelectedGradientState] = useState("rainbow");
+  const [activeTab, setActiveTab] = useState("gradient");
+  const [showGradientOptions, setShowGradientOptions] = useState(false);
+  const [showBackgroundColor, setShowBackgroundColor] = useState(false);
   const [floatingToolbar, setFloatingToolbar] = useState({ show: false, x: 0, y: 0 });
+
+  // Smart conditional logic for interface display
+  const showGradientOnly = textStyle === "gradient" && isTransparent;
+  const showBackgroundOnly = textStyle === "rainbow" && !isTransparent;
+  const showTabbedInterface = textStyle === "gradient" && !isTransparent;
+  const showRightPanel = showGradientOnly || showBackgroundOnly || showTabbedInterface;
 
   useEffect(() => {
     updatePreview();
-    // Add global click listener for deselection
     document.addEventListener('click', handleClickOutside);
     return () => {
       document.removeEventListener('click', handleClickOutside);
+      // Reset all global variables when component unmounts
+      text = "";
+      fontSize = 24;
+      lineHeight = 1;
+      letterSpacing = 1;
+      fontFamily = "Arial";
+      textStyle = "rainbow";
+      gradientAngle = 45;
+      selectedGradient = "rainbow";
+      customGradient = null;
+      backgroundColor = "#ffffff";
+      isTransparent = true;
+      textSelections = {};
+      selectedTextRange = null;
     };
   }, []);
 
-  // Add persistent focus effect for gradient colors (stays until changed)
+  // Reset React state when component mounts
+  useEffect(() => {
+    setAngleDisplay(45);
+    setSelectedGradientState("rainbow");
+    setShowGradientOptions(false);
+    setShowBackgroundColor(false);
+    setFloatingToolbar({ show: false, x: 0, y: 0 });
+  }, []);
+
   const addPersistentFocus = (element) => {
-    // Remove focus from all gradient elements
     document.querySelectorAll('.gradient-circle.focus-effect, .custom-colors input.focus-effect').forEach(el => {
       el.classList.remove('focus-effect');
     });
-    // Add focus to clicked element (persistent)
     element.classList.add('focus-effect');
   };
 
-  // Update background color selection (persistent)
   const updateBackgroundSelection = (selectedColor) => {
-    // Remove selected class from all background color circles
     document.querySelectorAll('.color-circle').forEach(circle => {
       circle.classList.remove('selected');
     });
-    // Add selected class to the circle with matching background color
     document.querySelectorAll('.color-circle').forEach(circle => {
       if (circle.style.backgroundColor === selectedColor || 
           rgbToHex(circle.style.backgroundColor) === selectedColor) {
@@ -79,7 +102,6 @@ export default function Rainbow() {
     });
   };
 
-  // Helper function to convert RGB to HEX
   const rgbToHex = (rgb) => {
     if (!rgb || rgb === 'transparent') return rgb;
     const result = rgb.match(/\d+/g);
@@ -87,7 +109,6 @@ export default function Rainbow() {
     return '#' + result.map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
   };
 
-  // Apply settings to selected text
   const applyToSelection = (property, value) => {
     if (!selectedTextRange) return;
     
@@ -98,7 +119,6 @@ export default function Rainbow() {
     updatePreview();
   };
 
-  // Handle text selection in preview
   const handleTextSelection = () => {
     const selection = window.getSelection();
     if (selection.rangeCount > 0 && selection.toString().length > 0) {
@@ -106,23 +126,38 @@ export default function Rainbow() {
       
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
-      const previewRect = previewRef.current.getBoundingClientRect();
       
-      // Position floating toolbar at center of screen
+      // Position floating toolbar above selected text with edge case handling
+      const toolbarWidth = 300;
+      const toolbarHeight = 100;
+      const margin = 6;
+      
+      let x = rect.left + (rect.width / 2) - (toolbarWidth / 2);
+      let y = rect.top - toolbarHeight - margin + window.scrollY;
+      
+      // Handle left edge
+      if (x < margin) x = margin;
+      // Handle right edge
+      if (x + toolbarWidth > window.innerWidth - margin) {
+        x = window.innerWidth - toolbarWidth - margin;
+      }
+      // Handle top edge
+      if (y < margin + window.scrollY) {
+        y = rect.bottom + margin + window.scrollY;
+      }
+      
       setFloatingToolbar({
         show: true,
-        x: window.innerWidth / 2 - 150,
-        y: window.innerHeight / 2 - 50
+        x: x,
+        y: y
       });
       
       const startContainer = range.startContainer;
       const endContainer = range.endContainer;
       
-      // Find start and end character indices using data-char-index
       let startIndex = -1;
       let endIndex = -1;
       
-      // Get start index
       if (startContainer.nodeType === Node.TEXT_NODE) {
         const startSpan = startContainer.parentElement;
         if (startSpan && startSpan.hasAttribute('data-char-index')) {
@@ -130,21 +165,17 @@ export default function Rainbow() {
         }
       }
       
-      // Get end index
       if (endContainer.nodeType === Node.TEXT_NODE) {
         const endSpan = endContainer.parentElement;
         if (endSpan && endSpan.hasAttribute('data-char-index')) {
           endIndex = parseInt(endSpan.getAttribute('data-char-index'));
-          // Adjust for selection length within the span
           if (startContainer === endContainer) {
             endIndex = startIndex + range.toString().length - 1;
           }
         }
       }
       
-      // Handle multi-span selections
       if (startIndex !== -1 && endIndex === -1) {
-        const allSpans = previewRef.current.querySelectorAll('[data-char-index]');
         const selectedText = selection.toString();
         endIndex = startIndex + selectedText.length - 1;
       }
@@ -154,40 +185,15 @@ export default function Rainbow() {
           start: Math.min(startIndex, endIndex),
           end: Math.max(startIndex, endIndex)
         };
-        
-        // Update form controls to show selected text properties
-        const firstCharSettings = textSelections[selectedTextRange.start] || {};
-        if (fontSizeRef.current) {
-          fontSizeRef.current.value = firstCharSettings.fontSize || fontSize;
-        }
-        if (fontFamilyRef.current) {
-          fontFamilyRef.current.value = firstCharSettings.fontFamily || fontFamily;
-        }
-        if (colorRef.current) {
-          colorRef.current.value = firstCharSettings.customColor || '#000000';
-        }
-        if (alignmentRef.current) {
-          alignmentRef.current.value = firstCharSettings.alignment || 'left';
-        }
       }
     } else {
       setHasSelection(false);
       setFloatingToolbar({ show: false, x: 0, y: 0 });
       selectedTextRange = null;
-      
-      // Reset form controls to global values
-      if (fontSizeRef.current) {
-        fontSizeRef.current.value = fontSize;
-      }
-      if (fontFamilyRef.current) {
-        fontFamilyRef.current.value = fontFamily;
-      }
     }
   };
 
-  // Handle click outside to deselect
   const handleClickOutside = (e) => {
-    // Only deselect if clicking outside the preview area AND outside controls AND not on background colors AND not on floating toolbar
     if (!previewRef.current?.contains(e.target) && 
         !e.target.closest('.control-grid') && 
         !e.target.closest('.gradient-grid') && 
@@ -203,7 +209,6 @@ export default function Rainbow() {
     }
   };
 
-  // Create gradient text using HTML spans instead of canvas
   const createGradientText = (text, fontSize, lineHeight, fontFamily, letterSpacing) => {
     const container = document.createElement("div");
     const lines = text.split("\n");
@@ -217,7 +222,6 @@ export default function Rainbow() {
       lineDiv.style.userSelect = "text";
       lineDiv.style.cursor = "text";
       
-      // Check if any character in this line has alignment setting
       let lineAlignment = 'left';
       for (let i = 0; i < line.length; i++) {
         const charSettings = textSelections[charIndex + i] || {};
@@ -228,7 +232,6 @@ export default function Rainbow() {
       }
       lineDiv.style.textAlign = lineAlignment;
 
-      // Count non-space characters for gradient calculation
       const nonSpaceChars = line.replace(/ /g, '');
       let nonSpaceIndex = 0;
 
@@ -239,7 +242,6 @@ export default function Rainbow() {
         span.textContent = char;
         span.setAttribute('data-char-index', charIndex);
         
-        // Apply character-specific settings or defaults
         const charSettings = textSelections[charIndex] || {};
         span.style.fontSize = (charSettings.fontSize || fontSize) + "px";
         span.style.fontWeight = "bold";
@@ -247,24 +249,13 @@ export default function Rainbow() {
         span.style.letterSpacing = (charSettings.letterSpacing || letterSpacing) + "px";
         span.style.userSelect = "text";
         
-        // Apply gradient color or custom color
         if (charSettings.customColor) {
           span.style.color = charSettings.customColor;
         } else if (char === ' ') {
-          // Spaces get transparent or inherit color
           span.style.color = 'transparent';
         } else {
-          // Calculate gradient color per line for non-space characters only
-          let position;
-          if (nonSpaceChars.length === 1) {
-            position = 0; // Single character gets first color
-          } else {
-            position = nonSpaceIndex / (nonSpaceChars.length - 1);
-          }
-          
-          // Apply angle rotation to position
+          let position = nonSpaceChars.length === 1 ? 0 : nonSpaceIndex / (nonSpaceChars.length - 1);
           const rotatedPosition = (position + (gradientAngle / 360)) % 1;
-          
           const segmentIndex = Math.floor(rotatedPosition * (colorMatches.length - 1));
           const segmentFactor = (rotatedPosition * (colorMatches.length - 1)) % 1;
           
@@ -273,19 +264,15 @@ export default function Rainbow() {
           } else {
             const color1 = colorMatches[segmentIndex];
             const color2 = colorMatches[segmentIndex + 1];
-            
-            // Simple color interpolation
             const r1 = parseInt(color1.slice(1, 3), 16);
             const g1 = parseInt(color1.slice(3, 5), 16);
             const b1 = parseInt(color1.slice(5, 7), 16);
             const r2 = parseInt(color2.slice(1, 3), 16);
             const g2 = parseInt(color2.slice(3, 5), 16);
             const b2 = parseInt(color2.slice(5, 7), 16);
-            
             const r = Math.round(r1 + (r2 - r1) * segmentFactor);
             const g = Math.round(g1 + (g2 - g1) * segmentFactor);
             const b = Math.round(b1 + (b2 - b1) * segmentFactor);
-            
             span.style.color = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
           }
           nonSpaceIndex++;
@@ -297,7 +284,6 @@ export default function Rainbow() {
       container.appendChild(lineDiv);
     });
 
-    // Add selection event listeners
     container.addEventListener('mouseup', handleTextSelection);
     container.addEventListener('keyup', handleTextSelection);
     container.addEventListener('click', (e) => {
@@ -308,7 +294,6 @@ export default function Rainbow() {
     return container;
   };
 
-  // Create rainbow text with selection support
   const createRainbowSpans = (text, fontSize, lineHeight, fontFamily, letterSpacing) => {
     const container = document.createElement("div");
     const lines = text.split("\n");
@@ -320,7 +305,6 @@ export default function Rainbow() {
       lineDiv.style.userSelect = "text";
       lineDiv.style.cursor = "text";
       
-      // Check if any character in this line has alignment setting
       let lineAlignment = 'left';
       for (let i = 0; i < line.length; i++) {
         const charSettings = textSelections[charIndex + i] || {};
@@ -337,7 +321,6 @@ export default function Rainbow() {
         span.textContent = char;
         span.setAttribute('data-char-index', charIndex);
         
-        // Apply character-specific settings or defaults
         const charSettings = textSelections[charIndex] || {};
         span.style.fontSize = (charSettings.fontSize || fontSize) + "px";
         span.style.fontWeight = "bold";
@@ -352,7 +335,6 @@ export default function Rainbow() {
       container.appendChild(lineDiv);
     });
 
-    // Add selection event listeners
     container.addEventListener('mouseup', handleTextSelection);
     container.addEventListener('keyup', handleTextSelection);
     container.addEventListener('click', (e) => {
@@ -363,7 +345,6 @@ export default function Rainbow() {
     return container;
   };
 
-  // Clean up textSelections for characters beyond current text length
   const cleanupTextSelections = () => {
     const textLength = text.replace(/\n/g, "").length;
     Object.keys(textSelections).forEach(key => {
@@ -373,7 +354,6 @@ export default function Rainbow() {
     });
   };
 
-  // Debounced update preview
   const debouncedUpdatePreview = () => {
     if (updateTimeout) clearTimeout(updateTimeout);
     updateTimeout = setTimeout(() => {
@@ -382,21 +362,17 @@ export default function Rainbow() {
     }, 100);
   };
 
-  // Update preview (like JS version)
   const updatePreview = () => {
     const preview = previewRef.current;
     if (!preview) return;
 
-    // Only load font if it changed
     if (fontFamily !== preview.dataset.currentFont) {
       loadGoogleFont(fontFamily);
       preview.dataset.currentFont = fontFamily;
     }
 
-    // Clear previous content and event listeners
     preview.innerHTML = "";
     
-    // Set preview background
     if (!isTransparent) {
       preview.style.backgroundColor = backgroundColor;
     } else {
@@ -404,7 +380,6 @@ export default function Rainbow() {
     }
 
     if (!text.trim()) {
-      preview.innerHTML = '<p style="color: #94a3b8; font-style: italic;">Enter text to see preview...</p>';
       return;
     }
 
@@ -468,7 +443,6 @@ export default function Rainbow() {
         
         maxWidth = Math.max(maxWidth, lineWidth);
         totalHeight += (fontSize * lineHeight);
-        // Don't increment charIndex here for newline - it causes misalignment
       });
 
       // Check if any text uses center or right alignment
@@ -629,36 +603,6 @@ export default function Rainbow() {
     }
   };
 
-  // Helper function to calculate gradient color for character position
-  const getGradientColorForPosition = (charIndex, totalChars) => {
-    const gradientStr = customGradient || GRADIENT_PRESETS[selectedGradient];
-    const colors = gradientStr.match(/#[0-9a-fA-F]{6}/g) || [];
-    if (colors.length < 2) return colors[0] || "#FF0000";
-    
-    const position = charIndex / (totalChars - 1);
-    const segmentIndex = Math.floor(position * (colors.length - 1));
-    const segmentFactor = (position * (colors.length - 1)) % 1;
-    
-    if (segmentIndex >= colors.length - 1) return colors[colors.length - 1];
-    
-    const color1 = colors[segmentIndex];
-    const color2 = colors[segmentIndex + 1];
-    
-    // Simple color interpolation
-    const r1 = parseInt(color1.slice(1, 3), 16);
-    const g1 = parseInt(color1.slice(3, 5), 16);
-    const b1 = parseInt(color1.slice(5, 7), 16);
-    const r2 = parseInt(color2.slice(1, 3), 16);
-    const g2 = parseInt(color2.slice(3, 5), 16);
-    const b2 = parseInt(color2.slice(5, 7), 16);
-    
-    const r = Math.round(r1 + (r2 - r1) * segmentFactor);
-    const g = Math.round(g1 + (g2 - g1) * segmentFactor);
-    const b = Math.round(b1 + (b2 - b1) * segmentFactor);
-    
-    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-  };
-
   // Word export (matching live preview colors)
   const downloadWordDoc = () => {
     if (!text.trim()) return;
@@ -724,6 +668,34 @@ export default function Rainbow() {
     }
   };
 
+  const getGradientColorForPosition = (charIndex, totalChars) => {
+    const gradientStr = customGradient || GRADIENT_PRESETS[selectedGradient];
+    const colors = gradientStr.match(/#[0-9a-fA-F]{6}/g) || [];
+    if (colors.length < 2) return colors[0] || "#FF0000";
+    
+    const position = charIndex / (totalChars - 1);
+    const segmentIndex = Math.floor(position * (colors.length - 1));
+    const segmentFactor = (position * (colors.length - 1)) % 1;
+    
+    if (segmentIndex >= colors.length - 1) return colors[colors.length - 1];
+    
+    const color1 = colors[segmentIndex];
+    const color2 = colors[segmentIndex + 1];
+    
+    const r1 = parseInt(color1.slice(1, 3), 16);
+    const g1 = parseInt(color1.slice(3, 5), 16);
+    const b1 = parseInt(color1.slice(5, 7), 16);
+    const r2 = parseInt(color2.slice(1, 3), 16);
+    const g2 = parseInt(color2.slice(3, 5), 16);
+    const b2 = parseInt(color2.slice(5, 7), 16);
+    
+    const r = Math.round(r1 + (r2 - r1) * segmentFactor);
+    const g = Math.round(g1 + (g2 - g1) * segmentFactor);
+    const b = Math.round(b1 + (b2 - b1) * segmentFactor);
+    
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  };
+
   return (
     <div className="rainbow-page">
       <div className="tool-header">
@@ -733,36 +705,31 @@ export default function Rainbow() {
         </h1>
       </div>
 
-      <div className="tool-grid">
-        {/* LEFT */}
-        <div className="tool-panel">
-          <h3>Text Input</h3>
-          <div className="input-section">
-            <div className="input-container">
-              <label>Enter text</label>
-              <textarea
-                className="input"
-                defaultValue={text}
-                aria-label="Enter text to generate rainbow or gradient styling"
-                onChange={e => { text = e.target.value; debouncedUpdatePreview(); }}
-              />
-            </div>
-            <div className="controls-section">
-              <div className="control-grid">
-                <div>
+      <div className="new-layout">
+        <div className="input-column">
+          <div className={`top-section ${showRightPanel ? 'has-right-panel' : 'no-right-panel'}`}>
+            <div className="left-section">
+              <div className="text-input-container">
+                <textarea
+                  className="big-text-input"
+                  placeholder="Enter your text here..."
+                  defaultValue={text}
+                  onChange={e => { text = e.target.value; debouncedUpdatePreview(); }}
+                />
+              </div>
+              
+              <div className="controls-row">
+                <div className="control-item">
                   <label>Font Size</label>
                   <input 
                     ref={fontSizeRef}
                     type="number" 
                     defaultValue={fontSize} 
-                    onChange={e => { 
-                      fontSize = +e.target.value; 
-                      updatePreview();
-                    }} 
+                    onChange={e => { fontSize = +e.target.value; updatePreview(); }} 
                   />
                 </div>
-
-                <div>
+                
+                <div className="control-item">
                   <label>Line Height</label>
                   <input 
                     type="number" 
@@ -770,14 +737,11 @@ export default function Rainbow() {
                     min="0.5" 
                     max="5" 
                     defaultValue={lineHeight} 
-                    onChange={e => { 
-                      lineHeight = +e.target.value; 
-                      updatePreview();
-                    }} 
+                    onChange={e => { lineHeight = +e.target.value; updatePreview(); }} 
                   />
                 </div>
-
-                <div>
+                
+                <div className="control-item">
                   <label>Letter Spacing</label>
                   <input 
                     type="number" 
@@ -785,37 +749,30 @@ export default function Rainbow() {
                     min="0.5" 
                     max="5" 
                     defaultValue={letterSpacing} 
-                    onChange={e => { 
-                      letterSpacing = +e.target.value; 
-                      updatePreview();
-                    }} 
+                    onChange={e => { letterSpacing = +e.target.value; updatePreview(); }} 
                   />
                 </div>
-
-                <div>
+                
+                <div className="control-item">
                   <label>Font</label>
                   <select 
                     ref={fontFamilyRef}
-                    defaultValue={fontFamily} 
-                    onChange={e => { 
-                      fontFamily = e.target.value; 
-                      updatePreview();
-                    }} 
                     data-font-select
+                    defaultValue={fontFamily} 
+                    onChange={e => { fontFamily = e.target.value; updatePreview(); }}
                   >
                     {GOOGLE_FONTS.map(f => (
                       <option key={f} value={f}>{f}</option>
                     ))}
                   </select>
                 </div>
-
-                <div>
+                
+                <div className="control-item">
                   <label>Text Style</label>
                   <select 
                     defaultValue={textStyle} 
                     onChange={e => { 
                       textStyle = e.target.value; 
-                      setShowGradientOptions(textStyle === "gradient");
                       updatePreview();
                     }}
                   >
@@ -823,57 +780,217 @@ export default function Rainbow() {
                     <option value="gradient">Gradient Text</option>
                   </select>
                 </div>
+              </div>
+            </div>
 
-                <div>
-                  <label>Transparent Background</label>
-                  <button 
-                    className={`toggle-btn ${isTransparent ? 'active' : ''}`}
-                    aria-label={`Background transparency: ${isTransparent ? 'enabled' : 'disabled'}`}
-                    onClick={() => { 
-                      isTransparent = !isTransparent; 
-                      setShowBackgroundColor(!isTransparent);
-                      updatePreview(); 
-                    }}
-                  >
-                    <span className="toggle-slider"></span>
-                  </button>
-                </div>
-
-                {showBackgroundColor && (
-                  <div className="background-color-section">
-                    <label>Background Color</label>
-                    <div className="background-color-grid">
-                      {BACKGROUND_COLORS.map(color => (
-                        <div
-                          key={color}
-                          className={`color-circle ${backgroundColor === color ? "selected" : ""}`}
-                          style={{ backgroundColor: color }}
-                          onClick={(e) => { 
-                            e.stopPropagation();
-                            backgroundColor = color;
-                            updateBackgroundSelection(color);
-                            updatePreview(); 
-                          }}
-                        />
-                      ))}
-                    </div>
-                    
-                    <label>Custom Background Color</label>
-                    <div className="custom-background-color">
-                      <input 
-                        type="color" 
-                        value={backgroundColor}
-                        onChange={e => { 
-                          backgroundColor = e.target.value; 
-                          updatePreview(); 
-                        }} 
-                      />
-                    </div>
+            <div className="right-section">
+              {showTabbedInterface && (
+                <div className="options-panel">
+                  <div className="tab-header">
+                    <button 
+                      className={`tab-btn ${activeTab === 'gradient' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('gradient')}
+                    >
+                      Gradient
+                    </button>
+                    <button 
+                      className={`tab-btn ${activeTab === 'background' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('background')}
+                    >
+                      Background
+                    </button>
                   </div>
-                )}
+                  
+                  {activeTab === 'gradient' && (
+                    <div className="tab-content">
+                      <label>Choose Gradient</label>
+                      <div className="gradient-grid-two-lines">
+                        {Object.keys(GRADIENT_PRESETS).map(g => (
+                          <div
+                            key={g}
+                            className={`gradient-circle ${selectedGradientState === g ? "selected" : ""}`}
+                            style={{ background: GRADIENT_PRESETS[g] }}
+                            onClick={() => { 
+                              selectedGradient = g;
+                              setSelectedGradientState(g);
+                              customGradient = null; 
+                              gradientAngle = 45;
+                              setAngleDisplay(45);
+                              if (angleSliderRef.current) angleSliderRef.current.value = 45;
+                              updatePreview(); 
+                            }}
+                          />
+                        ))}
+                      </div>
+                      
+                      <div className="custom-gradient-header">
+                        <label>Custom Gradient Colors</label>
+                      </div>
+                      
+                      <div className="custom-colors">
+                        <input type="color" defaultValue="#ff0000" onChange={e => {
+                          addPersistentFocus(e.target);
+                          const color1 = e.target.value;
+                          const color2 = e.target.parentElement.children[1].value;
+                          const color3 = e.target.parentElement.children[2].value;
+                          customGradient = `linear-gradient(${gradientAngle}deg, ${color1}, ${color2}, ${color3})`;
+                          selectedGradient = "custom";
+                          setSelectedGradientState("custom");
+                          updatePreview();
+                        }} />
+                        <input type="color" defaultValue="#00ff00" onChange={e => {
+                          addPersistentFocus(e.target);
+                          const color1 = e.target.parentElement.children[0].value;
+                          const color2 = e.target.value;
+                          const color3 = e.target.parentElement.children[2].value;
+                          customGradient = `linear-gradient(${gradientAngle}deg, ${color1}, ${color2}, ${color3})`;
+                          selectedGradient = "custom";
+                          setSelectedGradientState("custom");
+                          updatePreview();
+                        }} />
+                        <input type="color" defaultValue="#0000ff" onChange={e => {
+                          addPersistentFocus(e.target);
+                          const color1 = e.target.parentElement.children[0].value;
+                          const color2 = e.target.parentElement.children[1].value;
+                          const color3 = e.target.value;
+                          customGradient = `linear-gradient(${gradientAngle}deg, ${color1}, ${color2}, ${color3})`;
+                          selectedGradient = "custom";
+                          setSelectedGradientState("custom");
+                          updatePreview();
+                        }} />
+                        <button className="apply-btn" onClick={() => {
+                          const inputs = document.querySelectorAll('.custom-colors input[type="color"]');
+                          customGradient = `linear-gradient(${gradientAngle}deg, ${inputs[0].value}, ${inputs[1].value}, ${inputs[2].value})`;
+                          selectedGradient = "custom";
+                          setSelectedGradientState("custom");
+                          updatePreview();
+                        }}>
+                          Apply
+                        </button>
+                      </div>
+                      
+                      <div className="gradient-direction-below">
+                        <label>Gradient Direction: {angleDisplay}°</label>
+                        <input 
+                          ref={angleSliderRef}
+                          type="range" 
+                          min="0" 
+                          max="360" 
+                          defaultValue={gradientAngle} 
+                          onChange={e => { 
+                            gradientAngle = +e.target.value; 
+                            setAngleDisplay(gradientAngle);
+                            updatePreview(); 
+                          }} 
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {activeTab === 'background' && (
+                    <div className="tab-content">
+                      <label>Background Colors</label>
+                      <div className="background-color-grid-two-lines">
+                        {BACKGROUND_COLORS.map(color => (
+                          <div
+                            key={color}
+                            className={`color-circle ${backgroundColor === color ? "selected" : ""}`}
+                            style={{ backgroundColor: color }}
+                            onClick={(e) => { 
+                              e.stopPropagation();
+                              backgroundColor = color;
+                              updateBackgroundSelection(color);
+                              updatePreview(); 
+                            }}
+                          />
+                        ))}
+                      </div>
+                      <label>Custom Background</label>
+                      <div className="custom-background-section">
+                        <input 
+                          type="color" 
+                          className="custom-color-circle"
+                          value={backgroundColor}
+                          onChange={e => { 
+                            backgroundColor = e.target.value; 
+                            updatePreview(); 
+                          }} 
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
-                {showGradientOptions && (
-                  <div>
+              {showGradientOnly && (
+                <div className="options-panel">
+                  <label>Choose Gradient</label>
+                  <div className="gradient-grid-two-lines">
+                    {Object.keys(GRADIENT_PRESETS).map(g => (
+                      <div
+                        key={g}
+                        className={`gradient-circle ${selectedGradientState === g ? "selected" : ""}`}
+                        style={{ background: GRADIENT_PRESETS[g] }}
+                        onClick={() => { 
+                          selectedGradient = g;
+                          setSelectedGradientState(g);
+                          customGradient = null; 
+                          gradientAngle = 45;
+                          setAngleDisplay(45);
+                          if (angleSliderRef.current) angleSliderRef.current.value = 45;
+                          updatePreview(); 
+                        }}
+                      />
+                    ))}
+                  </div>
+                  
+                  <div className="custom-gradient-header">
+                    <label>Custom Gradient Colors</label>
+                  </div>
+                  
+                  <div className="custom-colors">
+                    <input type="color" defaultValue="#ff0000" onChange={e => {
+                      addPersistentFocus(e.target);
+                      const color1 = e.target.value;
+                      const color2 = e.target.parentElement.children[1].value;
+                      const color3 = e.target.parentElement.children[2].value;
+                      customGradient = `linear-gradient(${gradientAngle}deg, ${color1}, ${color2}, ${color3})`;
+                      selectedGradient = "custom";
+                      setSelectedGradientState("custom");
+                      updatePreview();
+                    }} />
+                    <input type="color" defaultValue="#00ff00" onChange={e => {
+                      addPersistentFocus(e.target);
+                      const color1 = e.target.parentElement.children[0].value;
+                      const color2 = e.target.value;
+                      const color3 = e.target.parentElement.children[2].value;
+                      customGradient = `linear-gradient(${gradientAngle}deg, ${color1}, ${color2}, ${color3})`;
+                      selectedGradient = "custom";
+                      setSelectedGradientState("custom");
+                      updatePreview();
+                    }} />
+                    <input type="color" defaultValue="#0000ff" onChange={e => {
+                      addPersistentFocus(e.target);
+                      const color1 = e.target.parentElement.children[0].value;
+                      const color2 = e.target.parentElement.children[1].value;
+                      const color3 = e.target.value;
+                      customGradient = `linear-gradient(${gradientAngle}deg, ${color1}, ${color2}, ${color3})`;
+                      selectedGradient = "custom";
+                      setSelectedGradientState("custom");
+                      updatePreview();
+                    }} />
+                    <button className="apply-btn" onClick={() => {
+                      const inputs = document.querySelectorAll('.custom-colors input[type="color"]');
+                      customGradient = `linear-gradient(${gradientAngle}deg, ${inputs[0].value}, ${inputs[1].value}, ${inputs[2].value})`;
+                      selectedGradient = "custom";
+                      setSelectedGradientState("custom");
+                      updatePreview();
+                    }}>
+                      Apply
+                    </button>
+                  </div>
+                  
+                  <div className="gradient-direction-below">
                     <label>Gradient Direction: {angleDisplay}°</label>
                     <input 
                       ref={angleSliderRef}
@@ -885,151 +1002,130 @@ export default function Rainbow() {
                         gradientAngle = +e.target.value; 
                         setAngleDisplay(gradientAngle);
                         updatePreview(); 
-                      }} />
+                      }} 
+                    />
                   </div>
-                )}
+                </div>
+              )}
 
-
-              </div>
+              {showBackgroundOnly && (
+                <div className="options-panel">
+                  <label>Background Colors</label>
+                  <div className="background-color-grid-two-lines">
+                    {BACKGROUND_COLORS.map(color => (
+                      <div
+                        key={color}
+                        className={`color-circle ${backgroundColor === color ? "selected" : ""}`}
+                        style={{ backgroundColor: color }}
+                        onClick={(e) => { 
+                          e.stopPropagation();
+                          backgroundColor = color;
+                          updateBackgroundSelection(color);
+                          updatePreview(); 
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <label>Custom Background</label>
+                  <div className="custom-background-section">
+                    <input 
+                      type="color" 
+                      className="custom-color-circle"
+                      value={backgroundColor}
+                      onChange={e => { 
+                        backgroundColor = e.target.value; 
+                        updatePreview(); 
+                      }} 
+                    />
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-
-          {showGradientOptions && (
-            <>
-              <label>Choose Gradient</label>
-              <div className="gradient-grid">
-                {Object.keys(GRADIENT_PRESETS).map(g => (
-                  <div
-                    key={g}
-                    className={`gradient-circle ${selectedGradientState === g ? "selected" : ""}`}
-                    style={{ background: GRADIENT_PRESETS[g] }}
-                    onClick={(e) => { 
-                      selectedGradient = g;
-                      setSelectedGradientState(g);
-                      customGradient = null; 
-                      gradientAngle = 45;
-                      setAngleDisplay(45);
-                      if (angleSliderRef.current) angleSliderRef.current.value = 45;
-                      updatePreview(); 
-                    }}
-                  />
-                ))}
-              </div>
-
-              <label>Custom Gradient Colors</label>
-              <div className="custom-colors">
-                <input type="color" defaultValue="#ff0000" onChange={e => {
-                  addPersistentFocus(e.target);
-                  const color1 = e.target.value;
-                  const color2 = e.target.parentElement.children[1].value;
-                  const color3 = e.target.parentElement.children[2].value;
-                  customGradient = `linear-gradient(${gradientAngle}deg, ${color1}, ${color2}, ${color3})`;
-                  selectedGradient = "custom";
-                  setSelectedGradientState("custom");
-                  updatePreview();
-                }} />
-                <input type="color" defaultValue="#00ff00" onChange={e => {
-                  addPersistentFocus(e.target);
-                  const color1 = e.target.parentElement.children[0].value;
-                  const color2 = e.target.value;
-                  const color3 = e.target.parentElement.children[2].value;
-                  customGradient = `linear-gradient(${gradientAngle}deg, ${color1}, ${color2}, ${color3})`;
-                  selectedGradient = "custom";
-                  setSelectedGradientState("custom");
-                  updatePreview();
-                }} />
-                <input type="color" defaultValue="#0000ff" onChange={e => {
-                  addPersistentFocus(e.target);
-                  const color1 = e.target.parentElement.children[0].value;
-                  const color2 = e.target.parentElement.children[1].value;
-                  const color3 = e.target.value;
-                  customGradient = `linear-gradient(${gradientAngle}deg, ${color1}, ${color2}, ${color3})`;
-                  selectedGradient = "custom";
-                  setSelectedGradientState("custom");
-                  updatePreview();
-                }} />
-                <button className="apply-btn" onClick={() => {
-                  const inputs = document.querySelectorAll('.custom-colors input[type="color"]');
-                  customGradient = `linear-gradient(${gradientAngle}deg, ${inputs[0].value}, ${inputs[1].value}, ${inputs[2].value})`;
-                  selectedGradient = "custom";
-                  setSelectedGradientState("custom");
-                  updatePreview();
-                }}>
-                  Apply
-                </button>
-              </div>
-            </>
-          )}
-
-          <div className="export-box">
-            <button className="secondary" onClick={downloadWordDoc}>
-              Download Word Doc
-            </button>
-            <button onClick={generatePngImage}>
-              Generate PNG
-            </button>
           </div>
         </div>
 
-        {/* RIGHT */}
-        <div className="preview-panel">
-          <h3>Preview <span style={{fontSize: '14px', color: '#666'}}>(Select text to customize)</span></h3>
-          <div ref={previewRef} className="preview-canvas" />
-          
-          {/* Floating Toolbar */}
-          {floatingToolbar.show && (
-            <div 
-              className="floating-toolbar"
-              style={{
-                position: 'absolute',
-                left: floatingToolbar.x,
-                top: floatingToolbar.y,
-                transform: 'none'
-              }}
-            >
-              <div className="toolbar-controls">
-                <input 
-                  type="number" 
-                  min="12" 
-                  max="72" 
-                  defaultValue={fontSize}
-                  onChange={e => applyToSelection('fontSize', +e.target.value)}
-                  title="Font Size"
-                  style={{width: '50px'}}
-                />
-                <input 
-                  type="color" 
-                  defaultValue="#ffffff"
-                  onChange={e => applyToSelection('customColor', e.target.value)}
-                  title="Text Color"
-                />
-                <select onChange={e => {
-                  loadGoogleFont(e.target.value);
-                  applyToSelection('fontFamily', e.target.value);
-                }} title="Font Family" className="toolbar-font-select">
-                  {GOOGLE_FONTS.map(f => (
-                    <option key={f} value={f} style={{fontFamily: f}}>{f}</option>
-                  ))}
-                </select>
-                <div className="alignment-buttons">
-                  <button onClick={() => applyToSelection('alignment', 'left')} title="Left">L</button>
-                  <button onClick={() => applyToSelection('alignment', 'center')} title="Center">C</button>
-                  <button onClick={() => applyToSelection('alignment', 'right')} title="Right">R</button>
+        <div className="preview-column">
+          <div className="preview-section">
+            <div className="preview-header">
+              <h3>Preview <span style={{opacity: 0.4, fontSize: '12px'}}>(Select Text to Customize)</span></h3>
+              <div className="preview-controls">
+                <div className="transparent-toggle">
+                  <label>Transparent Background</label>
+                  <button 
+                    className={`toggle-btn ${isTransparent ? 'active' : ''}`}
+                    onClick={() => { 
+                      isTransparent = !isTransparent; 
+                      updatePreview(); 
+                    }}
+                  >
+                    <span className="toggle-slider"></span>
+                  </button>
                 </div>
-                <button 
-                  className="close-btn" 
-                  onClick={() => {
-                    setFloatingToolbar({ show: false, x: 0, y: 0 });
-                    window.getSelection().removeAllRanges();
-                    setHasSelection(false);
-                  }}
-                  title="Close"
-                >
-                  ×
+                <button className="export-btn secondary" onClick={downloadWordDoc}>
+                  Word
+                </button>
+                <button className="export-btn" onClick={generatePngImage}>
+                  PNG
                 </button>
               </div>
             </div>
-          )}
+            
+            <div ref={previewRef} className="preview-canvas" />
+            
+            {floatingToolbar.show && (
+              <div 
+                className="floating-toolbar"
+                style={{
+                  position: 'absolute',
+                  left: floatingToolbar.x,
+                  top: floatingToolbar.y,
+                  transform: 'none'
+                }}
+              >
+                <div className="toolbar-controls">
+                  <input 
+                    type="number" 
+                    min="12" 
+                    max="72" 
+                    defaultValue={fontSize}
+                    onChange={e => applyToSelection('fontSize', +e.target.value)}
+                    title="Font Size"
+                    style={{width: '50px'}}
+                  />
+                  <input 
+                    type="color" 
+                    defaultValue="#ffffff"
+                    onChange={e => applyToSelection('customColor', e.target.value)}
+                    title="Text Color"
+                  />
+                  <select onChange={e => {
+                    loadGoogleFont(e.target.value);
+                    applyToSelection('fontFamily', e.target.value);
+                  }} title="Font Family" className="toolbar-font-select">
+                    {GOOGLE_FONTS.map(f => (
+                      <option key={f} value={f} style={{fontFamily: f}}>{f}</option>
+                    ))}
+                  </select>
+                  <div className="alignment-buttons">
+                    <button onClick={() => applyToSelection('alignment', 'left')} title="Left">L</button>
+                    <button onClick={() => applyToSelection('alignment', 'center')} title="Center">C</button>
+                    <button onClick={() => applyToSelection('alignment', 'right')} title="Right">R</button>
+                  </div>
+                  <button 
+                    className="close-btn" 
+                    onClick={() => {
+                      setFloatingToolbar({ show: false, x: 0, y: 0 });
+                      window.getSelection().removeAllRanges();
+                      setHasSelection(false);
+                    }}
+                    title="Close"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
