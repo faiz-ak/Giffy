@@ -415,6 +415,7 @@ return (
           <div className="field">
             <label>Text Position</label>
             <select
+             value={gifCustom[activeGif]?.position ?? globalPosition}
               onChange={e =>
                 setGifCustom(prev => ({
                   ...prev,
