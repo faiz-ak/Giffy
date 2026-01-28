@@ -72,7 +72,9 @@ const [page, setPage] = useState(0);
 const inputRef = useRef(null);
 const [inputText, setInputText] = useState("");
 const [gifs, setGifs] = useState([]);
-const [loading, setLoading] = useState(false);
+const [pageLoading, setPageLoading] = useState(false);
+const [downloadLoading, setDownloadLoading] = useState(false);
+
 
 const [showText, setShowText] = useState(true);
 
@@ -96,7 +98,7 @@ useEffect(() => {
 
 const generateGif = async () => {
   if (!inputText.trim()) return;
-  setLoading(true);
+  setPageLoading(true);
   setGifs([]);
   setOffset(0);
   setPage(0);
@@ -106,31 +108,31 @@ const generateGif = async () => {
   setGifs(res.data);
   setOffset(LIMIT);
   if (res.data.length < LIMIT) setHasMore(false);
-  setLoading(false);
+  setPageLoading(false);
 };
 
 /* PAGINATION */
 const nextPage = async () => {
-  if (loading || !hasMore) return;
-  setLoading(true);
+  if (pageLoading || !hasMore) return;
+  setPageLoading(true);
   const res = await axios.get(`${BACKEND_URL}/api/gifs`, { params: { q: getSearchKeyword(inputText), offset }});
   setGifs(res.data);
   setOffset(offset + LIMIT);
   setPage(page + 1);
   if (res.data.length < LIMIT) setHasMore(false);
-  setLoading(false);
+  setPageLoading(false);
 };
 
 const prevPage = async () => {
-  if (loading || page === 0) return;
+  if (pageLoading || page === 0) return;
   const newOffset = Math.max(0, offset - LIMIT * 2);
-  setLoading(true);
+  setPageLoading(true);
   const res = await axios.get(`${BACKEND_URL}/api/gifs`, { params: { q: getSearchKeyword(inputText), offset: newOffset }});
   setGifs(res.data);
   setOffset(newOffset + LIMIT);
   setPage(page - 1);
   setHasMore(true);
-  setLoading(false);
+  setPageLoading(false);
 };
 
 /* DOWNLOAD */
@@ -142,7 +144,8 @@ const downloadGifWithText = async (gifUrl) => {
   const finalFont = custom.font ?? globalFont;
   const finalPosition = custom.position ?? globalPosition;
 
-  setLoading(true);
+  setDownloadLoading(true);
+
   const res = await fetch(`${BACKEND_URL}${gifUrl}`);
   const buffer = await res.arrayBuffer();
   const gif = parseGIF(buffer);
@@ -174,9 +177,13 @@ const downloadGifWithText = async (gifUrl) => {
     link.href = obj.image;
     link.download = `${finalText}.gif`;
     link.click();
-    setLoading(false);
+    setDownloadLoading(false);
   });
 };
+
+
+const skeletons = Array.from({ length: 8 });
+
 
 return (
 <div className="giffy-page">
@@ -188,7 +195,7 @@ return (
   ⏳ Please wait <strong>up to 1 minute</strong> After clicking <strong>Generate GIF</strong>.
   Our server may take a short time to wake up during the first run or after being idle for 15 minutes.
 </p>}
-
+<div className="search-row">
 <div className="input-container">
 <div className="search-icon">⌕</div>
 <input placeholder="Enter your text" ref={inputRef} value={inputText} onChange={(e)=>setInputText(e.target.value)} />
@@ -196,22 +203,44 @@ return (
 </div>
 
 <div className="btn-group">
-<button onClick={generateGif} disabled={loading}>Generate</button>
-{globalText && <button onClick={()=>setShowText(!showText)}>{showText?"Remove Text":"Add Text"}</button>}
+<button onClick={generateGif} disabled={pageLoading}>Generate</button>
+
+</div>
 </div>
 
+{/* 
 {gifs.length>0 && (
 <div className="custom-panel">
-<label>Overlay Text<input value={globalText} onChange={e=>setGlobalText(e.target.value)} /></label>
+<label>Overlay Text<input value={globalText} onChange={e=>setGlobalText(e.target.value)} />
+{globalText && <button onClick={()=>setShowText(!showText)}>{showText?"Remove Text":"Add Text"}</button>}
+</label>
 <label>Font Size<input type="range" min="18" max="44" value={globalSize} onChange={e=>setGlobalSize(+e.target.value)} /></label>
 <label>Text Color<input type="color" value={globalColor} onChange={e=>setGlobalColor(e.target.value)} /></label>
 <label>Font<select value={globalFont} onChange={e=>setGlobalFont(e.target.value)}>{GOOGLE_FONTS.map(f=><option key={f}>{f}</option>)}</select></label>
 <label>Position<select value={globalPosition} onChange={e=>setGlobalPosition(e.target.value)}><option value="top">Top</option><option value="center">Center</option><option value="bottom">Bottom</option></select></label>
 </div>
+)} */}
+{downloadLoading && (
+  <div className="global-loader">
+    <div className="loader-spinner" />
+    <span>Generating your GIF...</span>
+  </div>
 )}
-
+ 
 <div className="gif-grid">
-{gifs.map((gif,i)=>{
+
+{pageLoading
+  ? skeletons.map((_, i) => (
+      <div className="gif-card skeleton-card" key={i}>
+        <div className="gif-preview skeleton-box" />
+        <div className="gif-actions" style={{display:"flex",gap:"12px", width:"100%"}}>
+          <div className="skeleton-btn" />
+          <div className="skeleton-btn" />
+        </div>
+      </div>
+    ))
+  : gifs.map((gif, i) => {
+
 const custom = gifCustom[gif] || {};
 const displayText = custom.text ?? globalText ?? inputText;
 const displaySize = custom.size ?? globalSize;
@@ -226,7 +255,7 @@ return (
 {showText && <div className={`overlay ${displayPosition}`} style={{fontSize:displaySize,color:displayColor,fontFamily:displayFont}}>{displayText}</div>}
 </div>
 
-<div className="gif-actions" style={{display:"flex",gap:"12px"}}>
+ <div className="gif-actions" style={{display:"flex",gap:"12px", width:"100%"}}>
 <button onClick={()=>downloadGifWithText(gif)}>Download GIF</button>
 <button onClick={()=>setActiveGif(gif)}>Customize</button>
 </div>
@@ -237,111 +266,178 @@ return (
 
 {gifs.length>0 && (
 <div style={{ marginTop: "28px", display: "flex", gap: "16px", alignItems: "center" }}>
-<button onClick={prevPage} disabled={loading || page===0}>⬅</button>
+<button onClick={prevPage} disabled={pageLoading || page===0}>⬅</button>
 <span style={{ opacity: 0.7 }}>Page {page + 1}</span>
-<button onClick={nextPage} disabled={loading || !hasMore}>➡</button>
+<button onClick={nextPage} disabled={pageLoading || !hasMore}>➡</button>
 </div>
 )}
-
 {activeGif && (
   <div className="modal-backdrop" onClick={() => setActiveGif(null)}>
     <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-      
-      <div className="modal-header">
-        <h2>Customize GIF</h2>
+
+<div
+  className="modal-header"
+  style={{
+    textAlign: "center",
+    paddingBottom: "8px",
+    borderBottom: "1px solid rgba(255,255,255,0.06)"
+  }}
+>
+  <h2
+    style={{
+      fontSize: "20px",
+      fontWeight: "700",
+      letterSpacing: "0.4px",
+      background: "linear-gradient(90deg, #22c55e, #38bdf8)",
+      WebkitBackgroundClip: "text",
+      WebkitTextFillColor: "transparent",
+      margin: 0
+    }}
+  >
+    Customize Gif
+  </h2>
+
+</div>
+
+      <div className="modal-layout">
+
+        {/* LEFT SIDE — GIF PREVIEW */}
+     <div className="modal-preview">
+  <div className="modal-gif-wrapper">
+    <img src={`${BACKEND_URL}${activeGif}`} alt="preview" />
+
+    {showText && (
+      <div
+        className={`overlay ${
+          gifCustom[activeGif]?.position ?? globalPosition
+        }`}
+        style={{
+          fontSize: gifCustom[activeGif]?.size ?? globalSize,
+          color: gifCustom[activeGif]?.color ?? globalColor,
+          fontFamily: gifCustom[activeGif]?.font ?? globalFont
+        }}
+      >
+        {gifCustom[activeGif]?.text ?? globalText ?? inputText}
       </div>
+    )}
+  </div>
+</div>
 
-      <div className="modal-body">
-        <div className="field">
-          <label>Overlay Text</label>
-         <input
-  type="text"
-  placeholder="Enter text..."
-  value={
-    gifCustom[activeGif]?.text ??
-    globalText ??
-    inputText
-  }
-  onChange={e =>
-    setGifCustom(prev => ({
-      ...prev,
-      [activeGif]: {
-        ...prev[activeGif],
-        text: e.target.value
+
+        {/* RIGHT SIDE — CONTROLS */}
+        <div className="modal-controls">
+
+<div className="field">
+  <label>Overlay Text</label>
+
+  <div className="input-with-clear">
+    <input
+      type="text"
+      placeholder="Enter text..."
+      value={
+        gifCustom[activeGif]?.text ??
+        globalText ??
+        inputText
       }
-    }))
-  }
-/>
+      onChange={e =>
+        setGifCustom(prev => ({
+          ...prev,
+          [activeGif]: {
+            ...prev[activeGif],
+            text: e.target.value
+          }
+        }))
+      }
+    />
 
-        </div>
-
-        <div className="field">
-          <label>Font Size</label>
-          <input
-            type="range"
-            min="18"
-            max="44"
-            onChange={e =>
-              setGifCustom(prev => ({
-                ...prev,
-                [activeGif]: { ...prev[activeGif], size: +e.target.value }
-              }))
+    {(gifCustom[activeGif]?.text ?? globalText ?? inputText) && (
+      <button
+        className="clear-input-btn"
+        onClick={() =>
+          setGifCustom(prev => ({
+            ...prev,
+            [activeGif]: {
+              ...prev[activeGif],
+              text: ""
             }
-          />
-        </div>
+          }))
+        }
+        type="button"
+      >
+        ✕
+      </button>
+    )}
+  </div>
+</div>
 
-        <div className="field">
-          <label>Text Color</label>
-          <input
-            type="color"
-            onChange={e =>
-              setGifCustom(prev => ({
-                ...prev,
-                [activeGif]: { ...prev[activeGif], color: e.target.value }
-              }))
-            }
-          />
-        </div>
+          <div className="field">
+            <label>Font Size</label>
+            <input
+              type="range"
+              min="18"
+              max="44"
+              onChange={e =>
+                setGifCustom(prev => ({
+                  ...prev,
+                  [activeGif]: { ...prev[activeGif], size: +e.target.value }
+                }))
+              }
+            />
+          </div>
 
-        <div className="field">
-          <label>Font Family</label>
-          <select
-            onChange={e =>
-              setGifCustom(prev => ({
-                ...prev,
-                [activeGif]: { ...prev[activeGif], font: e.target.value }
-              }))
-            }
-          >
-            {GOOGLE_FONTS.map(f => <option key={f}>{f}</option>)}
-          </select>
-        </div>
+          <div className="field">
+            <label>Text Color</label>
+            <input
+              type="color"
+              onChange={e =>
+                setGifCustom(prev => ({
+                  ...prev,
+                  [activeGif]: { ...prev[activeGif], color: e.target.value }
+                }))
+              }
+            />
+          </div>
 
-        <div className="field">
-          <label>Text Position</label>
-          <select
-            onChange={e =>
-              setGifCustom(prev => ({
-                ...prev,
-                [activeGif]: { ...prev[activeGif], position: e.target.value }
-              }))
-            }
-          >
-            <option value="top">Top</option>
-            <option value="center">Center</option>
-            <option value="bottom">Bottom</option>
-          </select>
+          <div className="field">
+            <label>Font Family</label>
+            <select
+              onChange={e =>
+                setGifCustom(prev => ({
+                  ...prev,
+                  [activeGif]: { ...prev[activeGif], font: e.target.value }
+                }))
+              }
+            >
+              {GOOGLE_FONTS.map(f => <option key={f}>{f}</option>)}
+            </select>
+          </div>
+
+          <div className="field">
+            <label>Text Position</label>
+            <select
+              onChange={e =>
+                setGifCustom(prev => ({
+                  ...prev,
+                  [activeGif]: { ...prev[activeGif], position: e.target.value }
+                }))
+              }
+            >
+              <option value="top">Top</option>
+              <option value="center">Center</option>
+              <option value="bottom">Bottom</option>
+            </select>
+          </div>
+
         </div>
       </div>
 
       <div className="modal-footer">
-         <button className="closee-btn" onClick={() => setActiveGif(null)}>
+        <button className="closee-btn" onClick={() => setActiveGif(null)}>
           Close
         </button>
         <button className="done-btn" onClick={() => setActiveGif(null)}>
           Done
         </button>
-       
       </div>
 
     </div>
