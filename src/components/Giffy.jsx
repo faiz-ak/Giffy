@@ -328,7 +328,7 @@ return (
         <div className="modal-controls">
 
 <div className="field">
-  <label>Overlay Text</label>
+  <label>Text</label>
 
   <div className="input-with-clear">
     <input
