@@ -286,7 +286,7 @@
 .gif-grid {
   margin-top: 36px;
   width: 100%;
-  max-width: 1200px;
+  max-width: 1400px;
   display: grid;
   grid-template-columns: repeat(4, 1fr); /* 🔥 4 per row */
   gap: 24px;
