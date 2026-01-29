@@ -105,8 +105,8 @@ const loadGoogleFont = (font) => {
 };
  
 useEffect(() => {
-  loadGoogleFont(globalFont);
-}, [globalFont]);
+  GOOGLE_FONTS.forEach(f => loadGoogleFont(f));
+}, []);
  
 
  
@@ -420,19 +420,31 @@ return (
 
           <div className="field">
             <label>Font Family</label>
-            <select
-             onChange={e => {
-  const font = e.target.value;
-  loadGoogleFont(font);
+       <select
+  value={gifCustom[activeGif]?.font ?? globalFont}
+  onChange={e => {
+    const font = e.target.value;
+    loadGoogleFont(font);
  
-  setGifCustom(prev => ({
-    ...prev,
-    [activeGif]: { ...prev[activeGif], font }
-  }));
-}}
-            >
-              {GOOGLE_FONTS.map(f => <option key={f}>{f}</option>)}
-            </select>
+    setGifCustom(prev => ({
+      ...prev,
+      [activeGif]: { ...prev[activeGif], font }
+    }));
+  }}
+>
+  {GOOGLE_FONTS.map(f => (
+    <option
+      key={f}
+      value={f}
+      style={{
+        fontFamily: `"${f}", sans-serif`,
+        fontSize: "14px"
+      }}
+    >
+      {f}
+    </option>
+  ))}
+</select>
           </div>
 
           <div className="field">
