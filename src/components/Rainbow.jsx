@@ -805,6 +805,7 @@ export default function Rainbow() {
                     type="file"
                     accept=".txt,.docx,.pdf"
                     onChange={handleFileUpload}
+                    style={{ display: 'none' }}
                   />
                   <button
                     className="upload-file-btn"
