@@ -71,10 +71,29 @@
   border-radius: 16px;
   padding: 24px;
   border: 1px solid rgba(255,255,255,0.08);
+  height: 300px !important;
 }
 
 .text-input-container {
   margin-bottom: 6px;
+}
+
+.upload-file-btn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+  border: 1.5px solid rgba(56, 189, 248, 0.5);
+  background: transparent;
+  color: #38bdf8;
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.2s ease;
+}
+
+.upload-file-btn:hover {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.7);
+  transform: translateY(-1px);
 }
 
 .big-text-input {
@@ -282,18 +301,9 @@
   width: 50%;
 }
 
-.left-section {
-  background: rgba(15, 23, 42, 0.85);
-  border-radius: 16px;
-  padding: 24px;
-  border: 1px solid rgba(255,255,255,0.08);
-  transition: all 0.3s ease;
-  height: 280px;
-}
-
 .right-section {
-  min-height: 280px;
-  height: 280px;
+  min-height: 300px;
+  height: 300px;
 }
 
 .options-panel {
@@ -1966,3 +1976,4 @@ select[data-font-select] option[value="Tahoma"] { font-family: Tahoma, sans-seri
   background: rgba(34, 197, 94, 0.2);
   color: #22c55e;
 }
+
