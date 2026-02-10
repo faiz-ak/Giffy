@@ -689,13 +689,18 @@ export default function Rainbow() {
           updatePreview();
         }
       } else if (fileName.endsWith('.docx')) {
-        const arrayBuffer = await file.arrayBuffer();
-        const result = await mammoth.extractRawText({ arrayBuffer });
-        const textarea = document.querySelector('.big-text-input');
-        if (textarea) {
-          textarea.value = result.value;
-          text = result.value;
-          updatePreview();
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const result = await mammoth.extractRawText({ arrayBuffer });
+          const textarea = document.querySelector('.big-text-input');
+          if (textarea) {
+            textarea.value = result.value;
+            text = result.value;
+            updatePreview();
+          }
+        } catch (docxError) {
+          console.error('DOCX parsing error:', docxError);
+          alert('Error reading .docx file. Please try converting it to .txt format.');
         }
       } else if (fileName.endsWith('.pdf')) {
         const arrayBuffer = await file.arrayBuffer();
@@ -758,7 +763,7 @@ export default function Rainbow() {
       }
     } catch (error) {
       console.error('File upload error:', error);
-      alert('Error reading file. Please try again.');
+      alert('Error reading file. Please try again or use a different file format.');
     }
 
     e.target.value = '';
