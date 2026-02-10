@@ -699,7 +699,14 @@ export default function Rainbow() {
         }
       } else if (fileName.endsWith('.pdf')) {
         const arrayBuffer = await file.arrayBuffer();
-        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+        
+        // Check if PDF.js is loaded
+        if (!window.pdfjsLib) {
+          alert('PDF support is not available. Please try .txt or .docx files.');
+          return;
+        }
+        
+        const pdfjsLib = window.pdfjsLib;
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         
         const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
