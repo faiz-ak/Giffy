@@ -8,7 +8,6 @@ import {
   loadGoogleFont,
 } from "../utils/utils";
 import { saveAs } from "file-saver";
-import mammoth from "mammoth/mammoth.browser.min.js";
 
 // Global state variables (like JS version)
 let text = "";
@@ -46,8 +45,6 @@ export default function Rainbow() {
   const [showGradientOptions, setShowGradientOptions] = useState(false);
   const [showBackgroundColor, setShowBackgroundColor] = useState(false);
   const [floatingToolbar, setFloatingToolbar] = useState({ show: false, x: 0, y: 0 });
-  const [showExportMenu, setShowExportMenu] = useState(false);
-  const fileInputRef = useRef(null);
 
   // Smart conditional logic for interface display
   const showGradientOnly = textStyle === "gradient" && isTransparent;
@@ -203,14 +200,12 @@ export default function Rainbow() {
         !e.target.closest('.custom-colors') &&
         !e.target.closest('.background-color-section') &&
         !e.target.closest('.color-circle') &&
-        !e.target.closest('.floating-toolbar') &&
-        !e.target.closest('.export-dropdown')) {
+        !e.target.closest('.floating-toolbar')) {
       if (window.getSelection().toString().length === 0) {
         setHasSelection(false);
         setFloatingToolbar({ show: false, x: 0, y: 0 });
         selectedTextRange = null;
       }
-      setShowExportMenu(false);
     }
   };
 
@@ -673,102 +668,6 @@ export default function Rainbow() {
     }
   };
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const fileName = file.name.toLowerCase();
-
-    try {
-      if (fileName.endsWith('.txt')) {
-        const extractedText = await file.text();
-        const textarea = document.querySelector('.big-text-input');
-        if (textarea) {
-          textarea.value = extractedText;
-          text = extractedText;
-          updatePreview();
-        }
-      } else if (fileName.endsWith('.docx')) {
-        try {
-          const arrayBuffer = await file.arrayBuffer();
-          const result = await mammoth.extractRawText({ arrayBuffer });
-          const textarea = document.querySelector('.big-text-input');
-          if (textarea) {
-            textarea.value = result.value;
-            text = result.value;
-            updatePreview();
-          }
-        } catch (docxError) {
-          console.error('DOCX parsing error:', docxError);
-          alert('Error reading .docx file. Please try converting it to .txt format.');
-        }
-      } else if (fileName.endsWith('.pdf')) {
-        const arrayBuffer = await file.arrayBuffer();
-        
-        // Check if PDF.js is loaded
-        if (!window.pdfjsLib) {
-          alert('PDF support is not available. Please try .txt or .docx files.');
-          return;
-        }
-        
-        const pdfjsLib = window.pdfjsLib;
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        
-        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-        const pdf = await loadingTask.promise;
-        let extractedText = '';
-        
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const textContent = await page.getTextContent();
-          
-          let lastY = null;
-          let lineText = '';
-          
-          textContent.items.forEach((item, index) => {
-            const currentY = item.transform[5];
-            
-            // New line detected (Y position changed significantly)
-            if (lastY !== null && Math.abs(currentY - lastY) > 5) {
-              extractedText += lineText.trim() + '\n';
-              lineText = '';
-            }
-            
-            // Add space between words if needed
-            if (lineText && !lineText.endsWith(' ') && !item.str.startsWith(' ')) {
-              lineText += ' ';
-            }
-            
-            lineText += item.str;
-            lastY = currentY;
-          });
-          
-          // Add last line
-          if (lineText.trim()) {
-            extractedText += lineText.trim() + '\n';
-          }
-          
-          // Add page break
-          if (i < pdf.numPages) {
-            extractedText += '\n';
-          }
-        }
-        
-        const textarea = document.querySelector('.big-text-input');
-        if (textarea) {
-          textarea.value = extractedText.trim();
-          text = extractedText.trim();
-          updatePreview();
-        }
-      }
-    } catch (error) {
-      console.error('File upload error:', error);
-      alert('Error reading file. Please try again or use a different file format.');
-    }
-
-    e.target.value = '';
-  };
-
   const getGradientColorForPosition = (charIndex, totalChars) => {
     const gradientStr = customGradient || GRADIENT_PRESETS[selectedGradient];
     const colors = gradientStr.match(/#[0-9a-fA-F]{6}/g) || [];
@@ -811,23 +710,6 @@ export default function Rainbow() {
           <div className={`top-section ${showRightPanel ? 'has-right-panel' : 'no-right-panel'}`}>
             <div className="left-section">
               <div className="text-input-container">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".txt,.docx,.pdf"
-                    onChange={handleFileUpload}
-                    style={{ display: 'none' }}
-                  />
-                  <button
-                    className="upload-file-btn"
-                    onClick={() => fileInputRef.current?.click()}
-                    title="Upload .txt, .docx or .pdf file"
-                  >
-                    📄 Upload
-                  </button>
-                  <span style={{ fontSize: '10px', color: '#94a3b8' }}>(.txt, .docx, .pdf)</span>
-                </div>
                 <textarea
                   className="big-text-input"
                   placeholder="Enter your text here..."
@@ -837,20 +719,6 @@ export default function Rainbow() {
               </div>
               
               <div className="controls-row">
-                <div className="control-item">
-                  <label>Font</label>
-                  <select 
-                    ref={fontFamilyRef}
-                    data-font-select
-                    defaultValue={fontFamily} 
-                    onChange={e => { fontFamily = e.target.value; updatePreview(); }}
-                  >
-                    {GOOGLE_FONTS.map(f => (
-                      <option key={f} value={f}>{f}</option>
-                    ))}
-                  </select>
-                </div>
-
                 <div className="control-item">
                   <label>Font Size</label>
                   <input 
@@ -883,6 +751,20 @@ export default function Rainbow() {
                     defaultValue={letterSpacing} 
                     onChange={e => { letterSpacing = +e.target.value; updatePreview(); }} 
                   />
+                </div>
+                
+                <div className="control-item">
+                  <label>Font</label>
+                  <select 
+                    ref={fontFamilyRef}
+                    data-font-select
+                    defaultValue={fontFamily} 
+                    onChange={e => { fontFamily = e.target.value; updatePreview(); }}
+                  >
+                    {GOOGLE_FONTS.map(f => (
+                      <option key={f} value={f}>{f}</option>
+                    ))}
+                  </select>
                 </div>
                 
                 <div className="control-item">
@@ -1179,21 +1061,12 @@ export default function Rainbow() {
                     <span className="toggle-slider"></span>
                   </button>
                 </div>
-                <div className="export-dropdown">
-                  <button 
-                    className="export-btn" 
-                    onClick={() => setShowExportMenu(!showExportMenu)}
-                    style={{fontSize: '24px', lineHeight: '1'}}
-                  >
-                    ⬇
-                  </button>
-                  {showExportMenu && (
-                    <div className="export-menu">
-                      <button onClick={() => { generatePngImage(); setShowExportMenu(false); }}>PNG</button>
-                      <button onClick={() => { downloadWordDoc(); setShowExportMenu(false); }}>Word</button>
-                    </div>
-                  )}
-                </div>
+                <button className="export-btn secondary" onClick={downloadWordDoc}>
+                  Word
+                </button>
+                <button className="export-btn" onClick={generatePngImage}>
+                  PNG
+                </button>
               </div>
             </div>
             
