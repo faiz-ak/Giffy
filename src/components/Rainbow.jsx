@@ -8,6 +8,7 @@ import {
   loadGoogleFont,
 } from "../utils/utils";
 import { saveAs } from "file-saver";
+import mammoth from "mammoth";
 
 // Global state variables (like JS version)
 let text = "";
@@ -45,6 +46,43 @@ export default function Rainbow() {
   const [showGradientOptions, setShowGradientOptions] = useState(false);
   const [showBackgroundColor, setShowBackgroundColor] = useState(false);
   const [floatingToolbar, setFloatingToolbar] = useState({ show: false, x: 0, y: 0 });
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const fileInputRef = useRef(null);
+  const textareaRef = useRef(null);
+
+  // Handle file import
+  const handleFileImport = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      const fileType = file.name.split('.').pop().toLowerCase();
+      let extractedText = '';
+
+      if (fileType === 'txt') {
+        // TXT: Preserve exact content including spaces and line breaks
+        extractedText = await file.text();
+      } else if (fileType === 'doc' || fileType === 'docx') {
+        // Word: Extract raw text preserving spaces and line breaks
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        extractedText = result.value;
+      }
+
+      // Set the extracted text preserving all spaces and line breaks
+      text = extractedText;
+      if (textareaRef.current) {
+        textareaRef.current.value = extractedText;
+      }
+      updatePreview();
+    } catch (error) {
+      console.error('File import error:', error);
+      alert('Error importing file. Please try again.');
+    }
+
+    // Reset file input
+    event.target.value = '';
+  };
 
   // Smart conditional logic for interface display
   const showGradientOnly = textStyle === "gradient" && isTransparent;
@@ -200,12 +238,14 @@ export default function Rainbow() {
         !e.target.closest('.custom-colors') &&
         !e.target.closest('.background-color-section') &&
         !e.target.closest('.color-circle') &&
-        !e.target.closest('.floating-toolbar')) {
+        !e.target.closest('.floating-toolbar') &&
+        !e.target.closest('.export-dropdown')) {
       if (window.getSelection().toString().length === 0) {
         setHasSelection(false);
         setFloatingToolbar({ show: false, x: 0, y: 0 });
         selectedTextRange = null;
       }
+      setShowExportMenu(false);
     }
   };
 
@@ -610,10 +650,10 @@ export default function Rainbow() {
     try {
       const lines = text.split("\n");
       let globalCharIndex = 0;
-      const totalChars = text.replace(/\n/g, "").length;
+      const gradientStr = customGradient || GRADIENT_PRESETS[selectedGradient];
+      const colorMatches = gradientStr.match(/#[0-9a-fA-F]{6}/g) || [];
       
       const bodyContent = lines.map((line) => {
-        // Check alignment for this line
         let lineAlignment = 'left';
         const lineStartIndex = globalCharIndex;
         for (let i = 0; i < line.length; i++) {
@@ -624,6 +664,9 @@ export default function Rainbow() {
           }
         }
         
+        const nonSpaceChars = line.replace(/ /g, '');
+        let nonSpaceIndex = 0;
+        
         const spans = Array.from(line).map((char) => {
           const charSettings = textSelections[globalCharIndex] || {};
           let color;
@@ -631,17 +674,44 @@ export default function Rainbow() {
           if (charSettings.customColor) {
             color = charSettings.customColor;
           } else if (textStyle === "gradient") {
-            color = getGradientColorForPosition(globalCharIndex, totalChars);
+            if (char === ' ') {
+              color = 'transparent';
+            } else {
+              const position = nonSpaceChars.length === 1 ? 0 : nonSpaceIndex / (nonSpaceChars.length - 1);
+              const rotatedPosition = (position + (gradientAngle / 360)) % 1;
+              const segmentIndex = Math.floor(rotatedPosition * (colorMatches.length - 1));
+              const segmentFactor = (rotatedPosition * (colorMatches.length - 1)) % 1;
+              
+              if (segmentIndex >= colorMatches.length - 1 || colorMatches.length === 1) {
+                color = colorMatches[colorMatches.length - 1];
+              } else {
+                const color1 = colorMatches[segmentIndex];
+                const color2 = colorMatches[segmentIndex + 1];
+                const r1 = parseInt(color1.slice(1, 3), 16);
+                const g1 = parseInt(color1.slice(3, 5), 16);
+                const b1 = parseInt(color1.slice(5, 7), 16);
+                const r2 = parseInt(color2.slice(1, 3), 16);
+                const g2 = parseInt(color2.slice(3, 5), 16);
+                const b2 = parseInt(color2.slice(5, 7), 16);
+                const r = Math.round(r1 + (r2 - r1) * segmentFactor);
+                const g = Math.round(g1 + (g2 - g1) * segmentFactor);
+                const b = Math.round(b1 + (b2 - b1) * segmentFactor);
+                color = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+              }
+              nonSpaceIndex++;
+            }
           } else {
             color = RAINBOW_COLORS[globalCharIndex % RAINBOW_COLORS.length];
           }
           
           const charFontSize = charSettings.fontSize || fontSize;
-          const charFontFamily = charSettings.fontFamily || fontFamily;
+          const safeFontFamily = ['Arial', 'Times New Roman', 'Courier New', 'Georgia', 'Verdana'].includes(charSettings.fontFamily || fontFamily) 
+            ? (charSettings.fontFamily || fontFamily) 
+            : 'Arial';
           const charLetterSpacing = charSettings.letterSpacing || letterSpacing;
           
           globalCharIndex++;
-          return `<span style="font-weight:bold; font-size:${charFontSize}px; font-family:'${charFontFamily}'; color:${color}; letter-spacing:${charLetterSpacing}px">${char === ' ' ? '&nbsp;' : char}</span>`;
+          return `<span style="font-weight:bold; font-size:${charFontSize}px; font-family:'${safeFontFamily}'; color:${color}; letter-spacing:${charLetterSpacing}px">${char === ' ' ? '&nbsp;' : char}</span>`;
         }).join("");
         
         return `<div style="line-height:${lineHeight}; text-align:${lineAlignment}">${spans}</div>`;
@@ -666,6 +736,102 @@ export default function Rainbow() {
     } catch (error) {
       console.error('Word export failed:', error);
     }
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const fileName = file.name.toLowerCase();
+
+    try {
+      if (fileName.endsWith('.txt')) {
+        const extractedText = await file.text();
+        const textarea = document.querySelector('.big-text-input');
+        if (textarea) {
+          textarea.value = extractedText;
+          text = extractedText;
+          updatePreview();
+        }
+      } else if (fileName.endsWith('.docx')) {
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const result = await mammoth.extractRawText({ arrayBuffer });
+          const textarea = document.querySelector('.big-text-input');
+          if (textarea) {
+            textarea.value = result.value;
+            text = result.value;
+            updatePreview();
+          }
+        } catch (docxError) {
+          console.error('DOCX parsing error:', docxError);
+          alert('Error reading .docx file. Please try converting it to .txt format.');
+        }
+      } else if (fileName.endsWith('.pdf')) {
+        const arrayBuffer = await file.arrayBuffer();
+        
+        // Check if PDF.js is loaded
+        if (!window.pdfjsLib) {
+          alert('PDF support is not available. Please try .txt or .docx files.');
+          return;
+        }
+        
+        const pdfjsLib = window.pdfjsLib;
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        
+        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+        const pdf = await loadingTask.promise;
+        let extractedText = '';
+        
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          
+          let lastY = null;
+          let lineText = '';
+          
+          textContent.items.forEach((item, index) => {
+            const currentY = item.transform[5];
+            
+            // New line detected (Y position changed significantly)
+            if (lastY !== null && Math.abs(currentY - lastY) > 5) {
+              extractedText += lineText.trim() + '\n';
+              lineText = '';
+            }
+            
+            // Add space between words if needed
+            if (lineText && !lineText.endsWith(' ') && !item.str.startsWith(' ')) {
+              lineText += ' ';
+            }
+            
+            lineText += item.str;
+            lastY = currentY;
+          });
+          
+          // Add last line
+          if (lineText.trim()) {
+            extractedText += lineText.trim() + '\n';
+          }
+          
+          // Add page break
+          if (i < pdf.numPages) {
+            extractedText += '\n';
+          }
+        }
+        
+        const textarea = document.querySelector('.big-text-input');
+        if (textarea) {
+          textarea.value = extractedText.trim();
+          text = extractedText.trim();
+          updatePreview();
+        }
+      }
+    } catch (error) {
+      console.error('File upload error:', error);
+      alert('Error reading file. Please try again or use a different file format.');
+    }
+
+    e.target.value = '';
   };
 
   const getGradientColorForPosition = (charIndex, totalChars) => {
@@ -710,6 +876,23 @@ export default function Rainbow() {
           <div className={`top-section ${showRightPanel ? 'has-right-panel' : 'no-right-panel'}`}>
             <div className="left-section">
               <div className="text-input-container">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".txt,.docx,.pdf"
+                    onChange={handleFileUpload}
+                    style={{ display: 'none' }}
+                  />
+                  <button
+                    className="upload-file-btn"
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Upload .txt, .docx or .pdf file"
+                  >
+                    📄 Upload
+                  </button>
+                  <span style={{ fontSize: '10px', color: '#94a3b8' }}>(.txt, .docx, .pdf)</span>
+                </div>
                 <textarea
                   className="big-text-input"
                   placeholder="Enter your text here..."
@@ -719,6 +902,20 @@ export default function Rainbow() {
               </div>
               
               <div className="controls-row">
+                <div className="control-item">
+                  <label>Font</label>
+                  <select 
+                    ref={fontFamilyRef}
+                    data-font-select
+                    defaultValue={fontFamily} 
+                    onChange={e => { fontFamily = e.target.value; updatePreview(); }}
+                  >
+                    {GOOGLE_FONTS.map(f => (
+                      <option key={f} value={f}>{f}</option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="control-item">
                   <label>Font Size</label>
                   <input 
@@ -751,20 +948,6 @@ export default function Rainbow() {
                     defaultValue={letterSpacing} 
                     onChange={e => { letterSpacing = +e.target.value; updatePreview(); }} 
                   />
-                </div>
-                
-                <div className="control-item">
-                  <label>Font</label>
-                  <select 
-                    ref={fontFamilyRef}
-                    data-font-select
-                    defaultValue={fontFamily} 
-                    onChange={e => { fontFamily = e.target.value; updatePreview(); }}
-                  >
-                    {GOOGLE_FONTS.map(f => (
-                      <option key={f} value={f}>{f}</option>
-                    ))}
-                  </select>
                 </div>
                 
                 <div className="control-item">
@@ -1061,12 +1244,21 @@ export default function Rainbow() {
                     <span className="toggle-slider"></span>
                   </button>
                 </div>
-                <button className="export-btn secondary" onClick={downloadWordDoc}>
-                  Word
-                </button>
-                <button className="export-btn" onClick={generatePngImage}>
-                  PNG
-                </button>
+                <div className="export-dropdown">
+                  <button 
+                    className="export-btn" 
+                    onClick={() => setShowExportMenu(!showExportMenu)}
+                    style={{fontSize: '24px', lineHeight: '1'}}
+                  >
+                    ⬇
+                  </button>
+                  {showExportMenu && (
+                    <div className="export-menu">
+                      <button onClick={() => { generatePngImage(); setShowExportMenu(false); }}>PNG</button>
+                      <button onClick={() => { downloadWordDoc(); setShowExportMenu(false); }}>Word</button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
             
