@@ -8,7 +8,6 @@ import {
   loadGoogleFont,
 } from "../utils/utils";
 import { saveAs } from "file-saver";
-import mammoth from "mammoth";
 
 // Global state variables (like JS version)
 let text = "";
