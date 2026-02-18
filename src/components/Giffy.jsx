@@ -483,25 +483,35 @@ return (
 
 </div>
 {/* Floating Studio Button with Circular Text */}
-<a href="https://gif2adm.netlify.app/" 
+<a 
+  href="https://gif2adm.netlify.app/" 
   className="floating-studio-wrapper"
-  rel="noopener noreferrer" >
+  rel="noopener noreferrer"
+>
   <div className="circular-text">
-    <svg viewBox="0 0 100 100" width="100" height="100">
+    <svg viewBox="0 0 100 100">
       <path
         id="circlePath"
-        d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0"
+        /* Increased radius to prevent overlapping center button */
+        d="M 50, 50 m -43, 0 a 43,43 0 1,1 86,0 a 43,43 0 1,1 -86,0"
         fill="transparent"
       />
       <text fill="#22c55e">
-        <textPath xlinkHref="#circlePath">
-          GIF • CUSTOMIZATION • STUDIO
+        <textPath xlinkHref="#circlePath" startOffset="0%">
+          GIF CUSTOMIZATION STUDIO • GIF CUSTOMIZATION STUDIO •
         </textPath>
       </text>
     </svg>
   </div>
   <div className="studio-icon-button">
-    <span>🎨</span>
+    {/* Clean Modern Palette Icon */}
+    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="13.5" stroke="white"  cy="6.5" r=".5" fill="white"/>
+      <circle cx="17.5" stroke="white" cy="10.5" r=".5" fill="white"/>
+      <circle cx="15.5" stroke="white" cy="15.5" r=".5" fill="white"/>
+      <circle cx="8.5" stroke="white" cy="16.5" r=".5" fill="white"/>
+      <path d="M2 12c0-5.52 4.48-10 10-10 4.42 0 8 3.58 8 8 0 1.1-.9 2-2 2h-1c-1.1 0-2 .9-2 2v1c0 1.1-.9 2-2 2-5.52 0-10-4.48-10-10Z" stroke="white" />
+    </svg>
   </div>
 </a>
 </div>
