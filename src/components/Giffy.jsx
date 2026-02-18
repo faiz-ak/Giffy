@@ -485,7 +485,6 @@ return (
 {/* Floating Studio Button with Circular Text */}
 <a href="https://gif2adm.netlify.app/" 
   className="floating-studio-wrapper"
-  target="_blank" 
   rel="noopener noreferrer" >
   <div className="circular-text">
     <svg viewBox="0 0 100 100" width="100" height="100">
