@@ -663,67 +663,84 @@
     justify-content: center;
   }
 }
-/* 🎨 Floating Studio Button */
-.floating-studio-btn {
+/* 🏷️ Floating Wrapper */
+.floating-studio-wrapper {
   position: fixed;
-  right: 30px;
-  bottom: 30px;
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg, #22c55e, #38bdf8);
-  border-radius: 50%;
+  right: 40px;
+  bottom: 40px;
+  width: 110px; /* Larger to accommodate text outside */
+  height: 110px;
   display: flex;
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  box-shadow: 0 10px 25px rgba(34, 197, 94, 0.4);
   z-index: 9999;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: transform 0.3s ease;
 }
 
-.floating-studio-btn .studio-icon {
-  font-size: 28px;
-}
-
-/* Tooltip on hover */
-.studio-tooltip {
+/* 🎡 Rotating Circular Text */
+.circular-text {
   position: absolute;
-  right: 75px;
-  background: rgba(2, 6, 23, 0.9);
-  color: white;
-  padding: 8px 15px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  transition: 0.2s ease;
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  width: 100%;
+  height: 100%;
+  animation: rotateText 15s linear infinite;
 }
 
-.floating-studio-btn:hover {
-  transform: scale(1.1) rotate(10deg);
-  box-shadow: 0 15px 35px rgba(34, 197, 94, 0.6);
+.circular-text svg {
+  width: 100%;
+  height: 100%;
 }
 
-.floating-studio-btn:hover .studio-tooltip {
-  opacity: 1;
-  visibility: visible;
-  right: 85px;
+.circular-text text {
+  font-family: "Poppins", sans-serif;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
-/* Mobile Adjustments */
+/* 🔘 Central Round Button */
+.studio-icon-button {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  z-index: 2;
+  transition: all 0.3s ease;
+}
+
+/* ✨ Hover Effects */
+.floating-studio-wrapper:hover {
+  transform: scale(1.1);
+}
+
+.floating-studio-wrapper:hover .studio-icon-button {
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
+}
+
+/* 🔄 Spin Animation */
+@keyframes rotateText {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 📱 Mobile Tweaks */
 @media (max-width: 768px) {
-  .floating-studio-btn {
+  .floating-studio-wrapper {
     right: 20px;
     bottom: 20px;
-    width: 50px;
-    height: 50px;
+    width: 90px;
+    height: 90px;
   }
-  
-  .studio-tooltip {
-    display: none; /* Hide tooltip on small mobile screens */
+  .studio-icon-button {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
   }
 }
 /* ================= MOBILE + TABLET RESPONSIVE FIX ================= */
