@@ -482,14 +482,25 @@ return (
 
 
 </div>
- {/* Floating Studio Button */}
-<a 
-  href="/pro-studio" 
-  className="floating-studio-btn"
-  title="Go to GIF Customization Studio"
->
-  <div className="studio-icon">🎨</div>
-  <span className="studio-tooltip">GIF Customization Studio</span>
+{/* Floating Studio Button with Circular Text */}
+<a href="/pro-studio" className="floating-studio-wrapper">
+  <div className="circular-text">
+    <svg viewBox="0 0 100 100" width="100" height="100">
+      <path
+        id="circlePath"
+        d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0"
+        fill="transparent"
+      />
+      <text fill="#22c55e">
+        <textPath xlinkHref="#circlePath">
+          GIF CUSTOMIZATION STUDIO • GIF CUSTOMIZATION STUDIO •
+        </textPath>
+      </text>
+    </svg>
+  </div>
+  <div className="studio-icon-button">
+    <span>🎨</span>
+  </div>
 </a>
 </div>
 );
