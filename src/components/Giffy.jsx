@@ -482,6 +482,15 @@ return (
 
 
 </div>
+ {/* Floating Studio Button */}
+<a 
+  href="/pro-studio" 
+  className="floating-studio-btn"
+  title="Go to GIF Customization Studio"
+>
+  <div className="studio-icon">🎨</div>
+  <span className="studio-tooltip">GIF Customization Studio</span>
+</a>
 </div>
 );
 }
