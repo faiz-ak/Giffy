@@ -495,7 +495,7 @@ return (
       />
       <text fill="#22c55e">
         <textPath xlinkHref="#circlePath">
-          GIF CUSTOMIZATION STUDIO • GIF CUSTOMIZATION STUDIO •
+          GIF • CUSTOMIZATION • STUDIO
         </textPath>
       </text>
     </svg>
