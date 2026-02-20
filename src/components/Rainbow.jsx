@@ -9,6 +9,9 @@ import {
 } from "../utils/utils";
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
+import folderIcon from "../assets/folder.png";
+import downloadIcon from "../assets/download.svg";
+import italicIcon from "../assets/italic.png";
 
 // Global state variables (like JS version)
 let text = "";
@@ -22,6 +25,8 @@ let selectedGradient = "rainbow";
 let customGradient = null;
 let backgroundColor = "#ffffff";
 let isTransparent = true;
+let isBold = false;
+let isItalic = false;
 let textSelections = {}; // Store per-character settings
 let selectedTextRange = null; // Currently selected text range
 let updateTimeout = null; // Debounce timeout
@@ -53,6 +58,9 @@ export default function Rainbow() {
   const [showBackgroundPopup, setShowBackgroundPopup] = useState(false);
   const [textStyleState, setTextStyleState] = useState('rainbow');
   const [isTransparentState, setIsTransparentState] = useState(true);
+  const [isBoldState, setIsBoldState] = useState(false);
+  const [isItalicState, setIsItalicState] = useState(false);
+  const [selectedFontSize, setSelectedFontSize] = useState(24);
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -260,6 +268,10 @@ export default function Rainbow() {
           start: Math.min(startIndex, endIndex),
           end: Math.max(startIndex, endIndex)
         };
+        
+        // Get font size of first selected character
+        const firstCharSettings = textSelections[Math.min(startIndex, endIndex)] || {};
+        setSelectedFontSize(firstCharSettings.fontSize || fontSize);
       }
     } else {
       setHasSelection(false);
@@ -328,7 +340,8 @@ export default function Rainbow() {
         
         const charSettings = textSelections[charIndex] || {};
         span.style.fontSize = (charSettings.fontSize || fontSize) + "px";
-        span.style.fontWeight = "bold";
+        span.style.fontWeight = (charSettings.bold !== undefined ? charSettings.bold : isBold) ? "bold" : "normal";
+        span.style.fontStyle = (charSettings.italic !== undefined ? charSettings.italic : isItalic) ? "italic" : "normal";
         span.style.fontFamily = `"${charSettings.fontFamily || fontFamily}", sans-serif`;
         span.style.letterSpacing = (charSettings.letterSpacing || letterSpacing) + "px";
         span.style.userSelect = "text";
@@ -407,7 +420,8 @@ export default function Rainbow() {
         
         const charSettings = textSelections[charIndex] || {};
         span.style.fontSize = (charSettings.fontSize || fontSize) + "px";
-        span.style.fontWeight = "bold";
+        span.style.fontWeight = (charSettings.bold !== undefined ? charSettings.bold : isBold) ? "bold" : "normal";
+        span.style.fontStyle = (charSettings.italic !== undefined ? charSettings.italic : isItalic) ? "italic" : "normal";
         span.style.fontFamily = `"${charSettings.fontFamily || fontFamily}", sans-serif`;
         span.style.letterSpacing = (charSettings.letterSpacing || letterSpacing) + "px";
         span.style.color = charSettings.customColor || RAINBOW_COLORS[charIndex % RAINBOW_COLORS.length];
@@ -597,7 +611,9 @@ export default function Rainbow() {
           for (let charInLine = 0; charInLine < lineInfo.text.length; charInLine++) {
             const char = lineInfo.text[charInLine];
             const charSettings = textSelections[charIndex] || {};
-            ctx.font = `bold ${charSettings.fontSize || fontSize}px "${charSettings.fontFamily || fontFamily}", sans-serif`;
+            const fontWeight = isBold ? "bold" : "normal";
+            const fontStyle = isItalic ? "italic" : "normal";
+            ctx.font = `${fontStyle} ${fontWeight} ${charSettings.fontSize || fontSize}px "${charSettings.fontFamily || fontFamily}", sans-serif`;
             
             if (charSettings.customColor) {
               ctx.fillStyle = charSettings.customColor;
@@ -664,7 +680,9 @@ export default function Rainbow() {
           
           for (const char of lineInfo.text) {
             const charSettings = textSelections[charIndex] || {};
-            ctx.font = `bold ${charSettings.fontSize || fontSize}px "${charSettings.fontFamily || fontFamily}", sans-serif`;
+            const fontWeight = isBold ? "bold" : "normal";
+            const fontStyle = isItalic ? "italic" : "normal";
+            ctx.font = `${fontStyle} ${fontWeight} ${charSettings.fontSize || fontSize}px "${charSettings.fontFamily || fontFamily}", sans-serif`;
             ctx.fillStyle = charSettings.customColor || RAINBOW_COLORS[charIndex % RAINBOW_COLORS.length];
             ctx.fillText(char, x, y);
             const charWidth = ctx.measureText(char).width;
@@ -696,6 +714,8 @@ export default function Rainbow() {
       let globalCharIndex = 0;
       const gradientStr = customGradient || GRADIENT_PRESETS[selectedGradient];
       const colorMatches = gradientStr.match(/#[0-9a-fA-F]{6}/g) || [];
+      
+      const scaleFactor = 0.5;
       
       const bodyContent = lines.map((line) => {
         let lineAlignment = 'left';
@@ -748,23 +768,24 @@ export default function Rainbow() {
             color = RAINBOW_COLORS[globalCharIndex % RAINBOW_COLORS.length];
           }
           
-          const charFontSize = charSettings.fontSize || fontSize;
+          const charFontSize = (charSettings.fontSize || fontSize) * scaleFactor;
           const currentFont = charSettings.fontFamily || fontFamily;
-          const charLetterSpacing = charSettings.letterSpacing || letterSpacing;
+          const charLetterSpacing = (charSettings.letterSpacing || letterSpacing) * scaleFactor;
+          const fontWeight = (charSettings.bold !== undefined ? charSettings.bold : isBold) ? "bold" : "normal";
+          const fontStyle = (charSettings.italic !== undefined ? charSettings.italic : isItalic) ? "italic" : "normal";
           
           globalCharIndex++;
-          return `<span style="font-weight:bold; font-size:${charFontSize}pt; font-family:'${currentFont}', Arial, sans-serif; color:${color}; letter-spacing:${charLetterSpacing}pt">${char === ' ' ? '&nbsp;' : char}</span>`;
+          return `<span style="font-weight:${fontWeight}; font-style:${fontStyle}; font-size:${charFontSize}pt; font-family:'${currentFont}', Arial, sans-serif; color:${color}; letter-spacing:${charLetterSpacing}pt;">${char === ' ' ? '&nbsp;' : char}</span>`;
         }).join("");
         
-        return `<div style="line-height:${lineHeight}; text-align:${lineAlignment}">${spans}</div>`;
+        return `<div style="line-height:${lineHeight}; text-align:${lineAlignment};">${spans}</div>`;
       }).join("");
       
-      const backgroundStyle = !isTransparent ? `background-color: ${backgroundColor};` : '';
-      const tableContent = !isTransparent ? 
-        `<table style="width: 100%; border-collapse: collapse;"><tr><td style="${backgroundStyle} padding: 20px; border: none;">${bodyContent}</td></tr></table>` : 
+      const contentWrapper = !isTransparent ? 
+        `<div style="display: inline-block; background-color: ${backgroundColor}; padding: 20px;">${bodyContent}</div>` : 
         bodyContent;
       
-      const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Rainbow Text</title></head><body style="margin: 0; padding: 20px;">${tableContent}</body></html>`;
+      const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Rainbow Text</title><style>@page { size: A4; margin: 2cm; }</style></head><body>${contentWrapper}</body></html>`;
       const blob = new Blob([html], { type: "application/msword" });
       
       const link = document.createElement("a");
@@ -926,6 +947,19 @@ export default function Rainbow() {
           <span className="emoji">🌈</span>
           <span className="text">Rainbow Text Generator</span>
         </h1>
+        <button 
+          className="header-upload-btn"
+          onClick={() => fileInputRef.current?.click()}
+          title="To Extract text from file Upload .txt, .docx or .pdf file"
+        >
+          <img 
+            src={folderIcon} 
+            alt="Upload" 
+            width="20" 
+            height="20" 
+            style={{display: 'block'}}
+          />
+        </button>
       </div>
 
       <div className="new-layout">
@@ -940,253 +974,6 @@ export default function Rainbow() {
                   defaultValue={text}
                   onChange={e => { text = e.target.value; debouncedUpdatePreview(); }}
                 />
-              </div>
-              
-              <div className="compact-toolbar">
-                <select 
-                  ref={fontFamilyRef}
-                  data-font-select
-                  defaultValue={fontFamily} 
-                  onChange={e => { fontFamily = e.target.value; updatePreview(); }}
-                  title="Font Family"
-                >
-                  {GOOGLE_FONTS.map(f => (
-                    <option key={f} value={f}>{f}</option>
-                  ))}
-                </select>
-
-                <select 
-                  ref={fontSizeRef}
-                  defaultValue={fontSize} 
-                  onChange={e => { fontSize = +e.target.value; updatePreview(); }}
-                  title="Font Size"
-                  style={{width: '60px'}}
-                >
-                  {[8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 36, 48, 72].map(size => (
-                    <option key={size} value={size}>{size}</option>
-                  ))}
-                </select>
-                
-                <div className="spacing-dropdown">
-                  <button 
-                    className="spacing-btn"
-                    onClick={() => setShowLineHeightMenu(!showLineHeightMenu)}
-                    title="Line Height"
-                  >
-                    ↕
-                  </button>
-                  {showLineHeightMenu && (
-                    <div className="spacing-menu">
-                      {[0.5, 1, 1.5, 2, 2.5, 3].map(val => (
-                        <button key={val} onClick={() => { lineHeight = val; updatePreview(); setShowLineHeightMenu(false); }}>{val}</button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                
-                <div className="spacing-dropdown">
-                  <button 
-                    className="spacing-btn"
-                    onClick={() => setShowLetterSpacingMenu(!showLetterSpacingMenu)}
-                    title="Letter Spacing"
-                  >
-                    ↔
-                  </button>
-                  {showLetterSpacingMenu && (
-                    <div className="spacing-menu">
-                      {[0.5, 1, 1.5, 2, 2.5, 3].map(val => (
-                        <button key={val} onClick={() => { letterSpacing = val; updatePreview(); setShowLetterSpacingMenu(false); }}>{val}</button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                
-                <div className="alignment-toolbar-buttons">
-                  <button onClick={() => applyGlobalAlignment('left')} title="Align Left" className="align-btn">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                      <rect x="0" y="2" width="12" height="2"/>
-                      <rect x="0" y="6" width="10" height="2"/>
-                      <rect x="0" y="10" width="14" height="2"/>
-                    </svg>
-                  </button>
-                  <button onClick={() => applyGlobalAlignment('center')} title="Align Center" className="align-btn">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                      <rect x="2" y="2" width="12" height="2"/>
-                      <rect x="3" y="6" width="10" height="2"/>
-                      <rect x="1" y="10" width="14" height="2"/>
-                    </svg>
-                  </button>
-                  <button onClick={() => applyGlobalAlignment('right')} title="Align Right" className="align-btn">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                      <rect x="4" y="2" width="12" height="2"/>
-                      <rect x="6" y="6" width="10" height="2"/>
-                      <rect x="2" y="10" width="14" height="2"/>
-                    </svg>
-                  </button>
-                </div>
-                
-                <div className="spacing-dropdown">
-                  <button 
-                    className={`spacing-btn ${textStyleState === 'gradient' ? 'active' : ''}`}
-                    onClick={(e) => { 
-                      e.stopPropagation(); 
-                      if (textStyle === 'gradient') {
-                        textStyle = 'rainbow';
-                        setTextStyleState('rainbow');
-                        setShowGradientPopup(false);
-                      } else {
-                        textStyle = 'gradient';
-                        setTextStyleState('gradient');
-                        setShowGradientPopup(!showGradientPopup);
-                      }
-                      updatePreview();
-                    }}
-                    title="Gradient/Rainbow"
-                  >
-                    🎨
-                  </button>
-                  {showGradientPopup && (
-                    <div className="gradient-popup" onClick={(e) => e.stopPropagation()}>
-                      <label>Choose Gradient</label>
-                      <div className="gradient-grid-popup">
-                        {Object.keys(GRADIENT_PRESETS).map(g => (
-                          <div
-                            key={g}
-                            className={`gradient-circle ${selectedGradientState === g ? "selected" : ""}`}
-                            style={{ background: GRADIENT_PRESETS[g] }}
-                            onClick={() => { 
-                              selectedGradient = g;
-                              setSelectedGradientState(g);
-                              customGradient = null; 
-                              gradientAngle = 45;
-                              setAngleDisplay(45);
-                              if (angleSliderRef.current) angleSliderRef.current.value = 45;
-                              updatePreview(); 
-                            }}
-                          />
-                        ))}
-                      </div>
-                      <label>Custom Colors</label>
-                      <div className="custom-colors">
-                        <input type="color" defaultValue="#ff0000" onChange={e => {
-                          const color1 = e.target.value;
-                          const color2 = e.target.parentElement.children[1].value;
-                          const color3 = e.target.parentElement.children[2].value;
-                          customGradient = `linear-gradient(${gradientAngle}deg, ${color1}, ${color2}, ${color3})`;
-                          selectedGradient = "custom";
-                          setSelectedGradientState("custom");
-                          updatePreview();
-                        }} />
-                        <input type="color" defaultValue="#00ff00" onChange={e => {
-                          const color1 = e.target.parentElement.children[0].value;
-                          const color2 = e.target.value;
-                          const color3 = e.target.parentElement.children[2].value;
-                          customGradient = `linear-gradient(${gradientAngle}deg, ${color1}, ${color2}, ${color3})`;
-                          selectedGradient = "custom";
-                          setSelectedGradientState("custom");
-                          updatePreview();
-                        }} />
-                        <input type="color" defaultValue="#0000ff" onChange={e => {
-                          const color1 = e.target.parentElement.children[0].value;
-                          const color2 = e.target.parentElement.children[1].value;
-                          const color3 = e.target.value;
-                          customGradient = `linear-gradient(${gradientAngle}deg, ${color1}, ${color2}, ${color3})`;
-                          selectedGradient = "custom";
-                          setSelectedGradientState("custom");
-                          updatePreview();
-                        }} />
-                      </div>
-                      <label>Direction: {angleDisplay}°</label>
-                      <input 
-                        ref={angleSliderRef}
-                        type="range" 
-                        min="0" 
-                        max="360" 
-                        defaultValue={gradientAngle} 
-                        onChange={e => { 
-                          gradientAngle = +e.target.value; 
-                          setAngleDisplay(gradientAngle);
-                          updatePreview(); 
-                        }}
-                        style={{width: '100%'}}
-                      />
-                    </div>
-                  )}
-                </div>
-                
-                <div className="spacing-dropdown">
-                  <button 
-                    className={`spacing-btn ${!isTransparentState ? 'active' : ''}`}
-                    onClick={(e) => { 
-                      e.stopPropagation(); 
-                      if (!isTransparent) {
-                        isTransparent = true;
-                        setIsTransparentState(true);
-                        setShowBackgroundPopup(false);
-                      } else {
-                        isTransparent = false;
-                        setIsTransparentState(false);
-                        setShowBackgroundPopup(!showBackgroundPopup);
-                      }
-                      updatePreview();
-                    }}
-                    title="Background Color"
-                    style={{fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}
-                  >
-                    <svg width="24" height="24" viewBox="0 0 128 128" style={{display: 'block', margin: 'auto'}}>
-                      <g transform="translate(28,18) scale(0.7)">
-                        <g transform="rotate(35, 40, 50)">
-                          <rect x="8" y="20" rx="8" ry="8" width="64" height="60" fill="#ffffff" stroke="#000000" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round"/>
-                          <path d="M16,28 C34,20 54,20 72,28" fill="none" stroke="#000000" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round"/>
-                        </g>
-                        <g transform="translate(62,10)">
-                          <rect x="-3" y="0" width="6" height="38" rx="3" ry="3" fill="#ffffff" stroke="#000000" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round"/>
-                        </g>
-                      </g>
-                      <g transform="translate(78,72) scale(1.8)">
-                        <path d="M10 0 C10 0, 0 12, 0 18 C0 23, 4 28, 10 28 C16 28, 20 23, 20 18 C20 12, 10 0, 10 0 Z" fill="#ffc107" stroke="#000000" strokeWidth="2"/>
-                      </g>
-                    </svg>
-                  </button>
-                  {showBackgroundPopup && (
-                    <div className="gradient-popup" onClick={(e) => e.stopPropagation()}>
-                      <label>Background Colors</label>
-                      <div className="gradient-grid-popup">
-                        {BACKGROUND_COLORS.map(color => (
-                          <div
-                            key={color}
-                            className={`gradient-circle ${backgroundColor === color ? "selected" : ""}`}
-                            style={{ background: color }}
-                            onClick={() => { 
-                              backgroundColor = color;
-                              updatePreview(); 
-                            }}
-                          />
-                        ))}
-                      </div>
-                      <label>Custom Background</label>
-                      <div className="custom-colors">
-                        <input 
-                          type="color" 
-                          value={backgroundColor}
-                          onChange={e => { 
-                            backgroundColor = e.target.value; 
-                            updatePreview(); 
-                          }} 
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
-                <button 
-                  className="spacing-btn"
-                  onClick={() => fileInputRef.current?.click()}
-                  title="To extract text Upload .txt, .docx or .pdf file"
-                  style={{fontSize: '18px'}}
-                >
-                  📤
-                </button>
               </div>
             </div>
           </div>
@@ -1204,13 +991,296 @@ export default function Rainbow() {
                   onChange={handleFileUpload}
                   style={{ display: 'none' }}
                 />
+                
+                <div className="compact-toolbar">
+                  <select 
+                    ref={fontFamilyRef}
+                    data-font-select
+                    defaultValue={fontFamily} 
+                    onChange={e => { fontFamily = e.target.value; updatePreview(); }}
+                    title="Font Family"
+                  >
+                    {GOOGLE_FONTS.map(f => (
+                      <option key={f} value={f}>{f}</option>
+                    ))}
+                  </select>
+
+                  <select 
+                    ref={fontSizeRef}
+                    defaultValue={fontSize} 
+                    onChange={e => { fontSize = +e.target.value; updatePreview(); }}
+                    title="Font Size"
+                    style={{width: '60px'}}
+                  >
+                    {[8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 36, 48, 72].map(size => (
+                      <option key={size} value={size}>{size}</option>
+                    ))}
+                  </select>
+                  
+                  <button 
+                    className={`spacing-btn ${isBoldState ? 'active' : ''}`}
+                    onClick={() => { isBold = !isBold; setIsBoldState(isBold); updatePreview(); }}
+                    title="Bold"
+                  >
+                    B
+                  </button>
+                  
+                  <button 
+                    className={`spacing-btn ${isItalicState ? 'active' : ''}`}
+                    onClick={() => { isItalic = !isItalic; setIsItalicState(isItalic); updatePreview(); }}
+                    title="Italic"
+                    style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}
+                  >
+                    <img 
+                      src={italicIcon} 
+                      alt="Italic" 
+                      width="20" 
+                      height="20" 
+                      style={{display: 'block', filter: 'brightness(0) invert(1)'}}
+                    />
+                  </button>
+                  
+                  <div className="spacing-dropdown">
+                    <button 
+                      className="spacing-btn"
+                      onClick={() => {
+                        setShowLineHeightMenu(!showLineHeightMenu);
+                        setShowLetterSpacingMenu(false);
+                        setShowGradientPopup(false);
+                        setShowBackgroundPopup(false);
+                      }}
+                      title="Line Height"
+                    >
+                      ↕
+                    </button>
+                    {showLineHeightMenu && (
+                      <div className="spacing-menu">
+                        {[0.5, 1, 1.5, 2, 2.5, 3].map(val => (
+                          <button key={val} onClick={() => { lineHeight = val; updatePreview(); setShowLineHeightMenu(false); }}>{val}</button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="spacing-dropdown">
+                    <button 
+                      className="spacing-btn"
+                      onClick={() => {
+                        setShowLetterSpacingMenu(!showLetterSpacingMenu);
+                        setShowLineHeightMenu(false);
+                        setShowGradientPopup(false);
+                        setShowBackgroundPopup(false);
+                      }}
+                      title="Letter Spacing"
+                    >
+                      ↔
+                    </button>
+                    {showLetterSpacingMenu && (
+                      <div className="spacing-menu">
+                        {[0.5, 1, 1.5, 2, 2.5, 3].map(val => (
+                          <button key={val} onClick={() => { letterSpacing = val; updatePreview(); setShowLetterSpacingMenu(false); }}>{val}</button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="alignment-toolbar-buttons">
+                    <button onClick={() => applyGlobalAlignment('left')} title="Align Left" className="align-btn">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <rect x="0" y="2" width="12" height="2"/>
+                        <rect x="0" y="6" width="10" height="2"/>
+                        <rect x="0" y="10" width="14" height="2"/>
+                      </svg>
+                    </button>
+                    <button onClick={() => applyGlobalAlignment('center')} title="Align Center" className="align-btn">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <rect x="2" y="2" width="12" height="2"/>
+                        <rect x="3" y="6" width="10" height="2"/>
+                        <rect x="1" y="10" width="14" height="2"/>
+                      </svg>
+                    </button>
+                    <button onClick={() => applyGlobalAlignment('right')} title="Align Right" className="align-btn">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <rect x="4" y="2" width="12" height="2"/>
+                        <rect x="6" y="6" width="10" height="2"/>
+                        <rect x="2" y="10" width="14" height="2"/>
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <div className="spacing-dropdown">
+                    <button 
+                      className={`spacing-btn ${textStyleState === 'gradient' ? 'active' : ''}`}
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        if (textStyle === 'gradient') {
+                          textStyle = 'rainbow';
+                          setTextStyleState('rainbow');
+                          setShowGradientPopup(false);
+                        } else {
+                          textStyle = 'gradient';
+                          setTextStyleState('gradient');
+                          setShowGradientPopup(!showGradientPopup);
+                        }
+                        setShowLineHeightMenu(false);
+                        setShowLetterSpacingMenu(false);
+                        setShowBackgroundPopup(false);
+                        updatePreview();
+                      }}
+                      title="Gradient/Rainbow"
+                    >
+                      🎨
+                    </button>
+                    {showGradientPopup && (
+                      <div className="gradient-popup" onClick={(e) => e.stopPropagation()}>
+                        <label>Choose Gradient</label>
+                        <div className="gradient-grid-popup">
+                          {Object.keys(GRADIENT_PRESETS).map(g => (
+                            <div
+                              key={g}
+                              className={`gradient-circle ${selectedGradientState === g ? "selected" : ""}`}
+                              style={{ background: GRADIENT_PRESETS[g] }}
+                              onClick={() => { 
+                                selectedGradient = g;
+                                setSelectedGradientState(g);
+                                customGradient = null; 
+                                gradientAngle = 45;
+                                setAngleDisplay(45);
+                                if (angleSliderRef.current) angleSliderRef.current.value = 45;
+                                updatePreview(); 
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <label>Custom Colors</label>
+                        <div className="custom-colors">
+                          <input type="color" defaultValue="#ff0000" onChange={e => {
+                            const color1 = e.target.value;
+                            const color2 = e.target.parentElement.children[1].value;
+                            const color3 = e.target.parentElement.children[2].value;
+                            customGradient = `linear-gradient(${gradientAngle}deg, ${color1}, ${color2}, ${color3})`;
+                            selectedGradient = "custom";
+                            setSelectedGradientState("custom");
+                            updatePreview();
+                          }} />
+                          <input type="color" defaultValue="#00ff00" onChange={e => {
+                            const color1 = e.target.parentElement.children[0].value;
+                            const color2 = e.target.value;
+                            const color3 = e.target.parentElement.children[2].value;
+                            customGradient = `linear-gradient(${gradientAngle}deg, ${color1}, ${color2}, ${color3})`;
+                            selectedGradient = "custom";
+                            setSelectedGradientState("custom");
+                            updatePreview();
+                          }} />
+                          <input type="color" defaultValue="#0000ff" onChange={e => {
+                            const color1 = e.target.parentElement.children[0].value;
+                            const color2 = e.target.parentElement.children[1].value;
+                            const color3 = e.target.value;
+                            customGradient = `linear-gradient(${gradientAngle}deg, ${color1}, ${color2}, ${color3})`;
+                            selectedGradient = "custom";
+                            setSelectedGradientState("custom");
+                            updatePreview();
+                          }} />
+                        </div>
+                        <label>Direction: {angleDisplay}°</label>
+                        <input 
+                          ref={angleSliderRef}
+                          type="range" 
+                          min="0" 
+                          max="360" 
+                          defaultValue={gradientAngle} 
+                          onChange={e => { 
+                            gradientAngle = +e.target.value; 
+                            setAngleDisplay(gradientAngle);
+                            updatePreview(); 
+                          }}
+                          style={{width: '100%'}}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="spacing-dropdown">
+                    <button 
+                      className={`spacing-btn ${!isTransparentState ? 'active' : ''}`}
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        if (!isTransparent) {
+                          isTransparent = true;
+                          setIsTransparentState(true);
+                          setShowBackgroundPopup(false);
+                        } else {
+                          isTransparent = false;
+                          setIsTransparentState(false);
+                          setShowBackgroundPopup(!showBackgroundPopup);
+                        }
+                        setShowLineHeightMenu(false);
+                        setShowLetterSpacingMenu(false);
+                        setShowGradientPopup(false);
+                        updatePreview();
+                      }}
+                      title="Background Color"
+                      style={{fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}
+                    >
+                      <svg width="24" height="24" viewBox="0 0 128 128" style={{display: 'block', margin: 'auto'}}>
+                        <g transform="translate(28,18) scale(0.7)">
+                          <g transform="rotate(35, 40, 50)">
+                            <rect x="8" y="20" rx="8" ry="8" width="64" height="60" fill="#ffffff" stroke="#000000" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round"/>
+                            <path d="M16,28 C34,20 54,20 72,28" fill="none" stroke="#000000" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round"/>
+                          </g>
+                          <g transform="translate(62,10)">
+                            <rect x="-3" y="0" width="6" height="38" rx="3" ry="3" fill="#ffffff" stroke="#000000" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round"/>
+                          </g>
+                        </g>
+                        <g transform="translate(78,72) scale(1.8)">
+                          <path d="M10 0 C10 0, 0 12, 0 18 C0 23, 4 28, 10 28 C16 28, 20 23, 20 18 C20 12, 10 0, 10 0 Z" fill="#ffc107" stroke="#000000" strokeWidth="2"/>
+                        </g>
+                      </svg>
+                    </button>
+                    {showBackgroundPopup && (
+                      <div className="gradient-popup" onClick={(e) => e.stopPropagation()}>
+                        <label>Background Colors</label>
+                        <div className="gradient-grid-popup">
+                          {BACKGROUND_COLORS.map(color => (
+                            <div
+                              key={color}
+                              className={`gradient-circle ${backgroundColor === color ? "selected" : ""}`}
+                              style={{ background: color }}
+                              onClick={() => { 
+                                backgroundColor = color;
+                                updatePreview(); 
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <label>Custom Background</label>
+                        <div className="custom-colors">
+                          <input 
+                            type="color" 
+                            value={backgroundColor}
+                            onChange={e => { 
+                              backgroundColor = e.target.value; 
+                              updatePreview(); 
+                            }} 
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 <div className="export-dropdown">
                   <button 
                     className="export-btn" 
                     onClick={() => setShowExportMenu(!showExportMenu)}
-                    style={{fontSize: '24px', lineHeight: '1'}}
+                    style={{fontSize: '24px', lineHeight: '1', display: 'flex', alignItems: 'center', justifyContent: 'center'}}
                   >
-                    ⬇
+                    <img 
+                      src={downloadIcon} 
+                      alt="Download" 
+                      width="24" 
+                      height="24" 
+                      style={{display: 'block'}}
+                    />
                   </button>
                   {showExportMenu && (
                     <div className="export-menu">
@@ -1239,11 +1309,37 @@ export default function Rainbow() {
                     type="number" 
                     min="12" 
                     max="72" 
-                    value={fontSize}
-                    onChange={e => applyToSelection('fontSize', +e.target.value)}
+                    value={selectedFontSize}
+                    onChange={e => {
+                      const newSize = +e.target.value;
+                      setSelectedFontSize(newSize);
+                      applyToSelection('fontSize', newSize);
+                    }}
                     title="Font Size"
                     style={{width: '50px'}}
                   />
+                  <button 
+                    className="toolbar-btn"
+                    onClick={() => applyToSelection('bold', !isBold)}
+                    title="Bold"
+                    style={{width: '24px', height: '24px', padding: 0, fontSize: '12px', fontWeight: 'bold'}}
+                  >
+                    B
+                  </button>
+                  <button 
+                    className="toolbar-btn"
+                    onClick={() => applyToSelection('italic', !isItalic)}
+                    title="Italic"
+                    style={{width: '24px', height: '24px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center'}}
+                  >
+                    <img 
+                      src={italicIcon} 
+                      alt="Italic" 
+                      width="14" 
+                      height="14" 
+                      style={{display: 'block', filter: 'brightness(0) invert(1)'}}
+                    />
+                  </button>
                   <input 
                     type="color" 
                     defaultValue="#000000"
