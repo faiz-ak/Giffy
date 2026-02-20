@@ -83,8 +83,8 @@
 
 .header-upload-btn {
   position: absolute;
-  right: 22px;
-  top: 129%;
+  right: 20px;
+  top: 50%;
   transform: translateY(0%);
   width: 32px;
   height: 32px;
