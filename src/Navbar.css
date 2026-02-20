@@ -1,7 +1,7 @@
 .nav-root {
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000000000;
   padding: 16px 24px;
   display: flex;
   align-items: center;
