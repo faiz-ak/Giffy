@@ -484,7 +484,7 @@ return (
 </div>
 {/* Floating Studio Button with Circular Text */}
 <a 
-  href="https://gif2adm.netlify.app/" 
+  href="https://giffyadm2.netlify.app/" 
   className="floating-studio-wrapper"
   rel="noopener noreferrer"
 >
