@@ -83,7 +83,7 @@
 
 .header-upload-btn {
   position: absolute;
-  right: 10px;
+  right: 20px;
   top: 50%;
   transform: translateY(0%);
   width: 32px;
@@ -98,7 +98,6 @@
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
-  z-index:1000000;
 }
 
 .header-upload-btn:hover {
