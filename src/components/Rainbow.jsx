@@ -11,7 +11,7 @@ import { saveAs } from "file-saver";
 import JSZip from "jszip";
 import folderIcon from "../assets/folder.png";
 import downloadIcon from "../assets/download.svg";
-import italicIcon from "../assets/italic.png";
+import italicIcon from "../assets/Italic.png";
 
 // Global state variables (like JS version)
 let text = "";
