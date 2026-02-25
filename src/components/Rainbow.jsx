@@ -11,7 +11,7 @@ import { saveAs } from "file-saver";
 import JSZip from "jszip";
 import folderIcon from "../assets/folder.png";
 import downloadIcon from "../assets/download.svg";
-import italicIcon from "../assets/Italic.png";
+import italicIcon from "../assets/italic.png";
 
 // Global state variables (like JS version)
 let text = "";
@@ -27,6 +27,7 @@ let backgroundColor = "#ffffff";
 let isTransparent = true;
 let isBold = false;
 let isItalic = false;
+let isUnderline = false;
 let textSelections = {}; // Store per-character settings
 let selectedTextRange = null; // Currently selected text range
 let updateTimeout = null; // Debounce timeout
@@ -60,7 +61,9 @@ export default function Rainbow() {
   const [isTransparentState, setIsTransparentState] = useState(true);
   const [isBoldState, setIsBoldState] = useState(false);
   const [isItalicState, setIsItalicState] = useState(false);
+  const [isUnderlineState, setIsUnderlineState] = useState(false);
   const [selectedFontSize, setSelectedFontSize] = useState(24);
+  const [copySuccess, setCopySuccess] = useState(false);
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -342,6 +345,7 @@ export default function Rainbow() {
         span.style.fontSize = (charSettings.fontSize || fontSize) + "px";
         span.style.fontWeight = (charSettings.bold !== undefined ? charSettings.bold : isBold) ? "bold" : "normal";
         span.style.fontStyle = (charSettings.italic !== undefined ? charSettings.italic : isItalic) ? "italic" : "normal";
+        span.style.textDecoration = (charSettings.underline !== undefined ? charSettings.underline : isUnderline) ? "underline" : "none";
         span.style.fontFamily = `"${charSettings.fontFamily || fontFamily}", sans-serif`;
         span.style.letterSpacing = (charSettings.letterSpacing || letterSpacing) + "px";
         span.style.userSelect = "text";
@@ -422,6 +426,7 @@ export default function Rainbow() {
         span.style.fontSize = (charSettings.fontSize || fontSize) + "px";
         span.style.fontWeight = (charSettings.bold !== undefined ? charSettings.bold : isBold) ? "bold" : "normal";
         span.style.fontStyle = (charSettings.italic !== undefined ? charSettings.italic : isItalic) ? "italic" : "normal";
+        span.style.textDecoration = (charSettings.underline !== undefined ? charSettings.underline : isUnderline) ? "underline" : "none";
         span.style.fontFamily = `"${charSettings.fontFamily || fontFamily}", sans-serif`;
         span.style.letterSpacing = (charSettings.letterSpacing || letterSpacing) + "px";
         span.style.color = charSettings.customColor || RAINBOW_COLORS[charIndex % RAINBOW_COLORS.length];
@@ -611,8 +616,9 @@ export default function Rainbow() {
           for (let charInLine = 0; charInLine < lineInfo.text.length; charInLine++) {
             const char = lineInfo.text[charInLine];
             const charSettings = textSelections[charIndex] || {};
-            const fontWeight = isBold ? "bold" : "normal";
-            const fontStyle = isItalic ? "italic" : "normal";
+            const fontWeight = (charSettings.bold !== undefined ? charSettings.bold : isBold) ? "bold" : "normal";
+            const fontStyle = (charSettings.italic !== undefined ? charSettings.italic : isItalic) ? "italic" : "normal";
+            const isUnderlined = (charSettings.underline !== undefined ? charSettings.underline : isUnderline);
             ctx.font = `${fontStyle} ${fontWeight} ${charSettings.fontSize || fontSize}px "${charSettings.fontFamily || fontFamily}", sans-serif`;
             
             if (charSettings.customColor) {
@@ -659,6 +665,15 @@ export default function Rainbow() {
             
             if (char !== ' ' || !isTransparent) {
               ctx.fillText(char, x, y);
+              if (isUnderlined) {
+                const charWidth = ctx.measureText(char).width;
+                ctx.beginPath();
+                ctx.moveTo(x, y + 2);
+                ctx.lineTo(x + charWidth, y + 2);
+                ctx.strokeStyle = ctx.fillStyle;
+                ctx.lineWidth = Math.max(1, (charSettings.fontSize || fontSize) / 16);
+                ctx.stroke();
+              }
             }
             const charWidth = ctx.measureText(char).width;
             const charLetterSpacing = charSettings.letterSpacing || letterSpacing;
@@ -680,11 +695,21 @@ export default function Rainbow() {
           
           for (const char of lineInfo.text) {
             const charSettings = textSelections[charIndex] || {};
-            const fontWeight = isBold ? "bold" : "normal";
-            const fontStyle = isItalic ? "italic" : "normal";
+            const fontWeight = (charSettings.bold !== undefined ? charSettings.bold : isBold) ? "bold" : "normal";
+            const fontStyle = (charSettings.italic !== undefined ? charSettings.italic : isItalic) ? "italic" : "normal";
+            const isUnderlined = (charSettings.underline !== undefined ? charSettings.underline : isUnderline);
             ctx.font = `${fontStyle} ${fontWeight} ${charSettings.fontSize || fontSize}px "${charSettings.fontFamily || fontFamily}", sans-serif`;
             ctx.fillStyle = charSettings.customColor || RAINBOW_COLORS[charIndex % RAINBOW_COLORS.length];
             ctx.fillText(char, x, y);
+            if (isUnderlined) {
+              const charWidth = ctx.measureText(char).width;
+              ctx.beginPath();
+              ctx.moveTo(x, y + 2);
+              ctx.lineTo(x + charWidth, y + 2);
+              ctx.strokeStyle = ctx.fillStyle;
+              ctx.lineWidth = Math.max(1, (charSettings.fontSize || fontSize) / 16);
+              ctx.stroke();
+            }
             const charWidth = ctx.measureText(char).width;
             const charLetterSpacing = charSettings.letterSpacing || letterSpacing;
             x += charWidth + charLetterSpacing;
@@ -705,7 +730,7 @@ export default function Rainbow() {
     }
   };
 
-  // Word export (matching live preview colors)
+// Word export (matching live preview colors)
   const downloadWordDoc = () => {
     if (!text.trim()) return;
     
@@ -773,9 +798,10 @@ export default function Rainbow() {
           const charLetterSpacing = (charSettings.letterSpacing || letterSpacing) * scaleFactor;
           const fontWeight = (charSettings.bold !== undefined ? charSettings.bold : isBold) ? "bold" : "normal";
           const fontStyle = (charSettings.italic !== undefined ? charSettings.italic : isItalic) ? "italic" : "normal";
+          const textDecoration = (charSettings.underline !== undefined ? charSettings.underline : isUnderline) ? "underline" : "none";
           
           globalCharIndex++;
-          return `<span style="font-weight:${fontWeight}; font-style:${fontStyle}; font-size:${charFontSize}pt; font-family:'${currentFont}', Arial, sans-serif; color:${color}; letter-spacing:${charLetterSpacing}pt;">${char === ' ' ? '&nbsp;' : char}</span>`;
+          return `<span style="font-weight:${fontWeight}; font-style:${fontStyle}; text-decoration:${textDecoration}; font-size:${charFontSize}pt; font-family:'${currentFont}', Arial, sans-serif; color:${color}; letter-spacing:${charLetterSpacing}pt;">${char === ' ' ? '&nbsp;' : char}</span>`;
         }).join("");
         
         return `<div style="line-height:${lineHeight}; text-align:${lineAlignment};">${spans}</div>`;
@@ -912,6 +938,110 @@ export default function Rainbow() {
     e.target.value = '';
   };
 
+  const copyFormattedText = async () => {
+    if (!text.trim() || !previewRef.current) return;
+    
+    try {
+      // Build HTML with all formatting preserved
+      const lines = text.split("\n");
+      let globalCharIndex = 0;
+      const gradientStr = customGradient || GRADIENT_PRESETS[selectedGradient];
+      const colorMatches = gradientStr.match(/#[0-9a-fA-F]{6}/g) || [];
+      
+      const bodyContent = lines.map((line) => {
+        let lineAlignment = 'left';
+        const lineStartIndex = globalCharIndex;
+        for (let i = 0; i < line.length; i++) {
+          const charSettings = textSelections[lineStartIndex + i] || {};
+          if (charSettings.alignment) {
+            lineAlignment = charSettings.alignment;
+            break;
+          }
+        }
+        
+        const nonSpaceChars = line.replace(/ /g, '');
+        let nonSpaceIndex = 0;
+        
+        const spans = Array.from(line).map((char) => {
+          const charSettings = textSelections[globalCharIndex] || {};
+          let color;
+          
+          if (charSettings.customColor) {
+            color = charSettings.customColor;
+          } else if (textStyle === "gradient") {
+            if (char === ' ') {
+              color = 'transparent';
+            } else {
+              const position = nonSpaceChars.length === 1 ? 0 : nonSpaceIndex / (nonSpaceChars.length - 1);
+              const rotatedPosition = (position + (gradientAngle / 360)) % 1;
+              const segmentIndex = Math.floor(rotatedPosition * (colorMatches.length - 1));
+              const segmentFactor = (rotatedPosition * (colorMatches.length - 1)) % 1;
+              
+              if (segmentIndex >= colorMatches.length - 1 || colorMatches.length === 1) {
+                color = colorMatches[colorMatches.length - 1];
+              } else {
+                const color1 = colorMatches[segmentIndex];
+                const color2 = colorMatches[segmentIndex + 1];
+                const r1 = parseInt(color1.slice(1, 3), 16);
+                const g1 = parseInt(color1.slice(3, 5), 16);
+                const b1 = parseInt(color1.slice(5, 7), 16);
+                const r2 = parseInt(color2.slice(1, 3), 16);
+                const g2 = parseInt(color2.slice(3, 5), 16);
+                const b2 = parseInt(color2.slice(5, 7), 16);
+                const r = Math.round(r1 + (r2 - r1) * segmentFactor);
+                const g = Math.round(g1 + (g2 - g1) * segmentFactor);
+                const b = Math.round(b1 + (b2 - b1) * segmentFactor);
+                color = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+              }
+              nonSpaceIndex++;
+            }
+          } else {
+            color = RAINBOW_COLORS[globalCharIndex % RAINBOW_COLORS.length];
+          }
+          
+          const charFontSize = charSettings.fontSize || fontSize;
+          const currentFont = charSettings.fontFamily || fontFamily;
+          const charLetterSpacing = charSettings.letterSpacing || letterSpacing;
+          const fontWeight = (charSettings.bold !== undefined ? charSettings.bold : isBold) ? "bold" : "normal";
+          const fontStyle = (charSettings.italic !== undefined ? charSettings.italic : isItalic) ? "italic" : "normal";
+          const textDecoration = (charSettings.underline !== undefined ? charSettings.underline : isUnderline) ? "underline" : "none";
+          
+          globalCharIndex++;
+          return `<span style="font-weight:${fontWeight}; font-style:${fontStyle}; text-decoration:${textDecoration}; font-size:${charFontSize}px; font-family:'${currentFont}', Arial, sans-serif; color:${color}; letter-spacing:${charLetterSpacing}px;">${char === ' ' ? '&nbsp;' : char}</span>`;
+        }).join("");
+        
+        return `<div style="line-height:${lineHeight}; text-align:${lineAlignment};">${spans}</div>`;
+      }).join("");
+      
+      const contentWrapper = !isTransparent ? 
+        `<div style="display: inline-block; background-color: ${backgroundColor}; padding: 20px;">${bodyContent}</div>` : 
+        bodyContent;
+      
+      const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  body { margin: 0; padding: 0; }
+</style>
+</head>
+<body>${contentWrapper}</body>
+</html>`;
+      
+      const clipboardItem = new ClipboardItem({
+        'text/html': new Blob([htmlContent], { type: 'text/html' }),
+        'text/plain': new Blob([text], { type: 'text/plain' })
+      });
+      
+      await navigator.clipboard.write([clipboardItem]);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (error) {
+      console.error('Copy failed:', error);
+      alert('Copy failed. Please try selecting and copying manually.');
+    }
+  };
+
   const getGradientColorForPosition = (charIndex, totalChars) => {
     const gradientStr = customGradient || GRADIENT_PRESETS[selectedGradient];
     const colors = gradientStr.match(/#[0-9a-fA-F]{6}/g) || [];
@@ -1038,6 +1168,15 @@ export default function Rainbow() {
                       height="20" 
                       style={{display: 'block', filter: 'brightness(0) invert(1)'}}
                     />
+                  </button>
+                  
+                  <button 
+                    className={`spacing-btn ${isUnderlineState ? 'active' : ''}`}
+                    onClick={() => { isUnderline = !isUnderline; setIsUnderlineState(isUnderline); updatePreview(); }}
+                    title="Underline"
+                    style={{textDecoration: 'underline'}}
+                  >
+                    U
                   </button>
                   
                   <div className="spacing-dropdown">
@@ -1268,6 +1407,14 @@ export default function Rainbow() {
                     )}
                   </div>
                 </div>
+                <button 
+                  className="spacing-btn"
+                  onClick={() => copyFormattedText()}
+                  title="Copy with colors"
+                  style={{fontSize: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#22c55e', color: 'white'}}
+                >
+                  📄
+                </button>
                 <div className="export-dropdown">
                   <button 
                     className="export-btn" 
@@ -1286,6 +1433,23 @@ export default function Rainbow() {
                     <div className="export-menu">
                       <button onClick={() => { generatePngImage(); setShowExportMenu(false); }}>PNG</button>
                       <button onClick={() => { downloadWordDoc(); setShowExportMenu(false); }}>Word</button>
+                    </div>
+                  )}
+                  {copySuccess && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '50px',
+                      right: '10px',
+                      background: '#22c55e',
+                      color: 'white',
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)',
+                      zIndex: 1000
+                    }}>
+                      ✓ Copied to clipboard!
                     </div>
                   )}
                 </div>
